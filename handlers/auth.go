@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/kiribu/jwt-practice/models"
 	"github.com/kiribu/jwt-practice/storage"
@@ -63,7 +64,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storage.Store.SaveRefreshToken(refreshToken, user.Username)
+	// Сохраняем refresh token с временем истечения
+	expiresAt := time.Now().Add(utils.RefreshTokenDuration)
+	if err := storage.Store.SaveRefreshToken(refreshToken, user.ID, expiresAt); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Ошибка сохранения токена")
+		return
+	}
 
 	response := models.TokenResponse{
 		AccessToken:  accessToken,
@@ -85,13 +91,21 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := storage.Store.ValidateRefreshToken(req.RefreshToken)
+	// Теперь возвращает userID вместо username
+	userID, err := storage.Store.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Невалидный refresh token")
 		return
 	}
 
-	accessToken, err := utils.GenerateAccessToken(username)
+	// Получаем пользователя по ID
+	user, err := storage.Store.GetUserByID(userID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Ошибка получения пользователя")
+		return
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.Username)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Ошибка генерации токена")
 		return
@@ -103,8 +117,13 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Удаляем старый и сохраняем новый токен
 	storage.Store.DeleteRefreshToken(req.RefreshToken)
-	storage.Store.SaveRefreshToken(newRefreshToken, username)
+	expiresAt := time.Now().Add(utils.RefreshTokenDuration)
+	if err := storage.Store.SaveRefreshToken(newRefreshToken, user.ID, expiresAt); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Ошибка сохранения токена")
+		return
+	}
 
 	response := models.TokenResponse{
 		AccessToken:  accessToken,
