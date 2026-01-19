@@ -4,14 +4,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
-	AccessSecret  = []byte("access-key")
-	RefreshSecret = []byte("refresh-key")
+	// AccessSecret читается из переменной окружения JWT_SECRET
+	// Переменная обязательна - приложение не запустится без неё
+	AccessSecret = getJWTSecret()
 )
 
 const (
@@ -65,4 +67,12 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		panic("JWT_SECRET environment variable is required but not set")
+	}
+	return []byte(secret)
 }
