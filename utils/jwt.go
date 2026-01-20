@@ -5,13 +5,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
-	AccessSecret = getJWTSecret()
+	accessSecret []byte
+	once         sync.Once
 )
 
 const (
@@ -24,6 +26,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// getAccessSecret возвращает JWT секрет с ленивой инициализацией
+func getAccessSecret() []byte {
+	once.Do(func() {
+		accessSecret = getJWTSecret()
+	})
+	return accessSecret
+}
+
 func GenerateAccessToken(username string) (string, error) {
 	claims := &Claims{
 		Username: username,
@@ -34,7 +44,7 @@ func GenerateAccessToken(username string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(AccessSecret)
+	return token.SignedString(getAccessSecret())
 }
 
 func GenerateRefreshToken() (string, error) {
@@ -53,7 +63,7 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("неожиданный метод подписи")
 		}
-		return AccessSecret, nil
+		return getAccessSecret(), nil
 	})
 
 	if err != nil {

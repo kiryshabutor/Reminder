@@ -13,11 +13,14 @@ import (
 	"github.com/kiribu/jwt-practice/storage"
 )
 
-func main() {
-	// Загрузка .env файла (если существует)
+func init() {
+	// Это должно выполниться ДО инициализации других пакетов
 	if err := godotenv.Load(); err != nil {
 		log.Println("Файл .env не найден, используем системные переменные окружения")
 	}
+}
+
+func main() {
 
 	// Загрузка конфигурации БД
 	dbConfig := config.LoadDatabaseConfig()
