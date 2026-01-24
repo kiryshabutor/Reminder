@@ -22,16 +22,26 @@ func init() {
 }
 
 func main() {
+	// Connect to Auth Service
 	authServiceAddr := getEnv("AUTH_SERVICE_ADDR", "auth-service:50051")
 	authClient, err := client.NewAuthClient(authServiceAddr)
 	if err != nil {
 		log.Fatalf("Failed to connect to Auth Service: %v", err)
 	}
 	defer authClient.Close()
-
 	log.Printf("API Gateway: Connected to Auth Service (%s)\n", authServiceAddr)
 
+	// Connect to Reminder Service
+	reminderServiceAddr := getEnv("REMINDER_SERVICE_ADDR", "reminder-service:50052")
+	reminderClient, err := client.NewReminderClient(reminderServiceAddr)
+	if err != nil {
+		log.Fatalf("Failed to connect to Reminder Service: %v", err)
+	}
+	defer reminderClient.Close()
+	log.Printf("API Gateway: Connected to Reminder Service (%s)\n", reminderServiceAddr)
+
 	authHandler := handlers.NewAuthHandler(authClient)
+	reminderHandler := handlers.NewReminderHandler(reminderClient)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -47,6 +57,12 @@ func main() {
 	protected.Use(authHandler.AuthMiddleware)
 	protected.GET("/profile", authHandler.Profile)
 
+	protected.POST("/reminders", reminderHandler.Create)
+	protected.GET("/reminders", reminderHandler.List)
+	protected.GET("/reminders/:id", reminderHandler.Get)
+	protected.PUT("/reminders/:id", reminderHandler.Update)
+	protected.DELETE("/reminders/:id", reminderHandler.Delete)
+
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
@@ -55,11 +71,16 @@ func main() {
 
 	log.Printf("API Gateway (HTTP) started on http://localhost:%s\n", port)
 	log.Println("Available endpoints:")
-	log.Println("   POST   /register  - Registration")
-	log.Println("   POST   /login     - Login")
-	log.Println("   POST   /refresh   - Token refresh")
-	log.Println("   GET    /profile   - Profile (protected)")
-	log.Println("   GET    /health    - Health check")
+	log.Println("   POST   /register        - Registration")
+	log.Println("   POST   /login           - Login")
+	log.Println("   POST   /refresh         - Token refresh")
+	log.Println("   GET    /profile         - Profile (protected)")
+	log.Println("   POST   /reminders       - Create reminder (protected)")
+	log.Println("   GET    /reminders       - List reminders (protected)")
+	log.Println("   GET    /reminders/:id   - Get reminder (protected)")
+	log.Println("   PUT    /reminders/:id   - Update reminder (protected)")
+	log.Println("   DELETE /reminders/:id   - Delete reminder (protected)")
+	log.Println("   GET    /health          - Health check")
 
 	go func() {
 		if err := e.Start(":" + port); err != nil {

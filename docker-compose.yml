@@ -8,6 +8,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+      TZ: ${TZ:-Europe/Moscow}
     ports:
       - "${DB_PORT}:5432"
     volumes:
@@ -30,13 +31,36 @@ services:
       - "${GRPC_PORT}:${GRPC_PORT}"
     environment:
       DB_HOST: database
-      DB_PORT: ${DB_PORT}
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_SSLMODE: ${DB_SSLMODE}
       JWT_SECRET: ${JWT_SECRET}
       GRPC_PORT: ${GRPC_PORT}
+      TZ: ${TZ:-Europe/Moscow}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # Reminder Service (gRPC)
+  reminder-service:
+    build:
+      context: .
+      dockerfile: build/reminder-service.Dockerfile
+    container_name: jwt-reminder-service
+    restart: unless-stopped
+    ports:
+      - "${REMINDER_GRPC_PORT}:${REMINDER_GRPC_PORT}"
+    environment:
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+      REMINDER_GRPC_PORT: ${REMINDER_GRPC_PORT}
+      TZ: ${TZ:-Europe/Moscow}
     depends_on:
       database:
         condition: service_healthy
@@ -52,11 +76,12 @@ services:
       - "${HTTP_PORT}:${HTTP_PORT}"
     environment:
       AUTH_SERVICE_ADDR: auth-service:${GRPC_PORT}
+      REMINDER_SERVICE_ADDR: reminder-service:${REMINDER_GRPC_PORT}
       HTTP_PORT: ${HTTP_PORT}
+      TZ: ${TZ:-Europe/Moscow}
     depends_on:
       - auth-service
+      - reminder-service
 
 volumes:
   postgres_data:
-
-
