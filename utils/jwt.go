@@ -17,7 +17,7 @@ var (
 )
 
 const (
-	AccessTokenDuration  = 2 * time.Minute
+	AccessTokenDuration  = 15 * time.Minute
 	RefreshTokenDuration = 2 * time.Hour
 )
 
