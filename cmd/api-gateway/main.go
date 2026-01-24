@@ -3,16 +3,16 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/kiribu/jwt-practice/internal/gateway/client"
 	"github.com/kiribu/jwt-practice/internal/gateway/handlers"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func init() {
@@ -22,7 +22,6 @@ func init() {
 }
 
 func main() {
-	// Connect to Auth Service
 	authServiceAddr := getEnv("AUTH_SERVICE_ADDR", "auth-service:50051")
 	authClient, err := client.NewAuthClient(authServiceAddr)
 	if err != nil {
@@ -34,28 +33,25 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(authClient)
 
-	r := mux.NewRouter()
+	e := echo.New()
+	e.HideBanner = true
 
-	r.HandleFunc("/register", authHandler.Register).Methods("POST")
-	r.HandleFunc("/login", authHandler.Login).Methods("POST")
-	r.HandleFunc("/refresh", authHandler.Refresh).Methods("POST")
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	protected := r.PathPrefix("/").Subrouter()
+	e.POST("/register", authHandler.Register)
+	e.POST("/login", authHandler.Login)
+	e.POST("/refresh", authHandler.Refresh)
+
+	protected := e.Group("")
 	protected.Use(authHandler.AuthMiddleware)
-	protected.HandleFunc("/profile", authHandler.Profile).Methods("GET")
+	protected.GET("/profile", authHandler.Profile)
 
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}).Methods("GET")
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(200, "OK")
+	})
 
 	port := getEnv("HTTP_PORT", "8080")
-	server := &http.Server{
-		Addr:         ":" + port,
-		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-	}
 
 	log.Printf("API Gateway (HTTP) started on http://localhost:%s\n", port)
 	log.Println("Available endpoints:")
@@ -65,10 +61,9 @@ func main() {
 	log.Println("   GET    /profile   - Profile (protected)")
 	log.Println("   GET    /health    - Health check")
 
-	// Graceful shutdown
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
+		if err := e.Start(":" + port); err != nil {
+			log.Printf("HTTP server stopped: %v", err)
 		}
 	}()
 
@@ -79,7 +74,7 @@ func main() {
 	log.Println("Shutting down API Gateway...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	server.Shutdown(ctx)
+	e.Shutdown(ctx)
 }
 
 func getEnv(key, defaultValue string) string {
