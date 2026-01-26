@@ -17,9 +17,10 @@ type Producer struct {
 
 func NewProducer(brokers []string, topic string) *Producer {
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP(brokers...),
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
+		Addr:                   kafka.TCP(brokers...),
+		Topic:                  topic,
+		Balancer:               &kafka.LeastBytes{},
+		AllowAutoTopicCreation: true,
 	}
 
 	return &Producer{writer: writer}
@@ -30,7 +31,7 @@ func (p *Producer) Close() error {
 }
 
 func (p *Producer) SendNotification(reminder models.Reminder) error {
-	return p.SendEvent(fmt.Sprintf("%d", reminder.ID), reminder)
+	return p.SendEvent(fmt.Sprintf("%d", reminder.UserID), reminder)
 }
 
 func (p *Producer) SendEvent(key string, payload interface{}) error {

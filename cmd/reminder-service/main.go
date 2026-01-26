@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Println(".env file not found, using system environment variables")
 	}
 }
@@ -45,7 +45,8 @@ func main() {
 	brokers := strings.Split(brokersEnv, ",")
 
 	// Producer for Notifications (for Worker)
-	notificationProducer := kafka.NewProducer(brokers, "notifications")
+	notificationTopic := getEnv("KAFKA_TOPIC_NOTIFICATIONS", "notifications")
+	notificationProducer := kafka.NewProducer(brokers, notificationTopic)
 	defer func() {
 		if err := notificationProducer.Close(); err != nil {
 			log.Printf("Failed to close notification producer: %v", err)
@@ -53,7 +54,8 @@ func main() {
 	}()
 
 	// Producer for Lifecycle Events (for Service)
-	lifecycleProducer := kafka.NewProducer(brokers, "reminder_lifecycle")
+	lifecycleTopic := getEnv("KAFKA_TOPIC_LIFECYCLE", "reminder_lifecycle")
+	lifecycleProducer := kafka.NewProducer(brokers, lifecycleTopic)
 	defer func() {
 		if err := lifecycleProducer.Close(); err != nil {
 			log.Printf("Failed to close lifecycle producer: %v", err)
@@ -74,7 +76,6 @@ func main() {
 
 	log.Printf("Reminder Service (gRPC) started on port %s\n", port)
 
-	// Worker Configuration
 	intervalStr := getEnv("WORKER_INTERVAL", "5s")
 	interval, err := time.ParseDuration(intervalStr)
 	if err != nil {
@@ -83,11 +84,9 @@ func main() {
 
 	workerInstance := worker.NewWorker(store, notificationProducer, interval)
 
-	// Context for worker
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Start Worker
 	go workerInstance.Start(ctx)
 
 	go func() {
@@ -102,7 +101,6 @@ func main() {
 
 	log.Println("Shutting down Reminder Service...")
 
-	// Stop worker first
 	cancel()
 
 	grpcServer.GracefulStop()

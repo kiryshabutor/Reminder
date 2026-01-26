@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/kiribu/jwt-practice/internal/reminder/grpc/pb"
 	"google.golang.org/grpc"
@@ -14,10 +16,18 @@ type ReminderClient struct {
 }
 
 func NewReminderClient(addr string) (*ReminderClient, error) {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	log.Printf("Connecting to Reminder Service at %s...", addr)
+	conn, err := grpc.DialContext(ctx, addr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Connected to Reminder Service at %s", addr)
 
 	return &ReminderClient{
 		conn:   conn,
