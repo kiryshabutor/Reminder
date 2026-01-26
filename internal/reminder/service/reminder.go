@@ -49,7 +49,7 @@ func (s *ReminderService) Create(userID int64, title, description, remindAtStr s
 		Timestamp:  time.Now(),
 		Payload:    reminder,
 	}
-	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", reminder.ID), event); err != nil {
+	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", reminder.UserID), event); err != nil {
 		log.Printf("Failed to send created event: %v", err)
 	}
 
@@ -86,7 +86,7 @@ func (s *ReminderService) Update(userID, id int64, title, description, remindAtS
 		Timestamp:  time.Now(),
 		Payload:    reminder,
 	}
-	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", reminder.ID), event); err != nil {
+	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", reminder.UserID), event); err != nil {
 		log.Printf("Failed to send updated event: %v", err)
 	}
 
@@ -106,7 +106,7 @@ func (s *ReminderService) Delete(userID, id int64) error {
 		Timestamp:  time.Now(),
 		Payload:    nil,
 	}
-	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", id), event); err != nil {
+	if err := s.eventProducer.SendEvent(fmt.Sprintf("%d", userID), event); err != nil {
 		log.Printf("Failed to send deleted event: %v", err)
 	}
 
