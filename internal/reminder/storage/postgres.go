@@ -87,13 +87,13 @@ func (s *PostgresStorage) Update(userID, id int64, title, description string, re
 	err := s.db.QueryRowx(
 		`UPDATE reminders
 		 SET title = $1, description = $2, remind_at = $3, updated_at = NOW()
-		 WHERE user_id = $4 AND id = $5
+		 WHERE user_id = $4 AND id = $5 AND is_sent = FALSE
 		 RETURNING id, user_id, title, description, remind_at, is_sent, created_at, updated_at`,
 		title, description, remindAt, userID, id,
 	).StructScan(&reminder)
 
 	if err != nil {
-		return nil, errors.New("reminder not found or update failed")
+		return nil, errors.New("reminder not found or already sent")
 	}
 
 	return &reminder, nil
