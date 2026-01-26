@@ -42,7 +42,6 @@ func (s *ReminderService) Create(userID int64, title, description, remindAtStr s
 		return nil, err
 	}
 
-	// Publish Created Event
 	event := models.LifecycleEvent{
 		EventType:  "created",
 		ReminderID: reminder.ID,
@@ -80,7 +79,6 @@ func (s *ReminderService) Update(userID, id int64, title, description, remindAtS
 		return nil, err
 	}
 
-	// Publish Updated Event
 	event := models.LifecycleEvent{
 		EventType:  "updated",
 		ReminderID: reminder.ID,
@@ -101,7 +99,6 @@ func (s *ReminderService) Delete(userID, id int64) error {
 		return err
 	}
 
-	// Publish Deleted Event
 	event := models.LifecycleEvent{
 		EventType:  "deleted",
 		ReminderID: id,
