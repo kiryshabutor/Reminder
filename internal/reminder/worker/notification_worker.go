@@ -5,25 +5,22 @@ import (
 	"log"
 	"time"
 
-	"github.com/kiribu/jwt-practice/internal/reminder/kafka"
 	"github.com/kiribu/jwt-practice/internal/reminder/storage"
 )
 
-type Worker struct {
+type NotificationWorker struct {
 	storage  storage.ReminderStorage
-	producer *kafka.Producer
 	interval time.Duration
 }
 
-func NewWorker(storage storage.ReminderStorage, producer *kafka.Producer, interval time.Duration) *Worker {
-	return &Worker{
+func NewNotificationWorker(storage storage.ReminderStorage, interval time.Duration) *NotificationWorker {
+	return &NotificationWorker{
 		storage:  storage,
-		producer: producer,
 		interval: interval,
 	}
 }
 
-func (w *Worker) Start(ctx context.Context) {
+func (w *NotificationWorker) Start(ctx context.Context) {
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 
@@ -40,7 +37,7 @@ func (w *Worker) Start(ctx context.Context) {
 	}
 }
 
-func (w *Worker) processPending() {
+func (w *NotificationWorker) processPending() {
 	reminders, err := w.storage.GetPending()
 	if err != nil {
 		log.Printf("Error fetching pending reminders: %v", err)
@@ -48,19 +45,14 @@ func (w *Worker) processPending() {
 	}
 
 	if len(reminders) > 0 {
-		log.Printf("Found %d pending reminders", len(reminders))
+		log.Printf("Found %d pending reminders, creating outbox events", len(reminders))
 	}
 
 	for _, reminder := range reminders {
-		err := w.producer.SendNotification(reminder)
-		if err != nil {
-			log.Printf("Error sending reminder %d to Kafka: %v", reminder.ID, err)
-			continue
-		}
-
-		err = w.storage.MarkAsSent(reminder.ID)
-		if err != nil {
-			log.Printf("Error marking reminder %d as sent: %v", reminder.ID, err)
+		if err := w.storage.CreateNotificationEventsAndMarkSent(reminder); err != nil {
+			log.Printf("Error creating notification events for reminder %d: %v", reminder.ID, err)
+		} else {
+			log.Printf("Successfully created notification events for reminder %d", reminder.ID)
 		}
 	}
 }

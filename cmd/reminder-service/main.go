@@ -40,11 +40,10 @@ func main() {
 
 	store := storage.NewPostgresStorage(db)
 
-	// Kafka & Worker
 	brokersEnv := getEnv("KAFKA_BROKERS", "kafka:9092")
 	brokers := strings.Split(brokersEnv, ",")
 
-	// Producer for Notifications (for Worker)
+	// Producer for Notifications (for NotificationWorker)
 	notificationTopic := getEnv("KAFKA_TOPIC_NOTIFICATIONS", "notifications")
 	notificationProducer := kafka.NewProducer(brokers, notificationTopic)
 	defer func() {
@@ -53,7 +52,7 @@ func main() {
 		}
 	}()
 
-	// Producer for Lifecycle Events (for Service)
+	// Producer for Lifecycle Events (for OutboxWorker)
 	lifecycleTopic := getEnv("KAFKA_TOPIC_LIFECYCLE", "reminder_lifecycle")
 	lifecycleProducer := kafka.NewProducer(brokers, lifecycleTopic)
 	defer func() {
@@ -62,7 +61,7 @@ func main() {
 		}
 	}()
 
-	reminderService := service.NewReminderService(store, lifecycleProducer)
+	reminderService := service.NewReminderService(store)
 	reminderServer := remindergrpc.NewReminderServer(reminderService)
 
 	grpcServer := grpc.NewServer()
@@ -82,12 +81,14 @@ func main() {
 		log.Fatalf("Invalid WORKER_INTERVAL: %v", err)
 	}
 
-	workerInstance := worker.NewWorker(store, notificationProducer, interval)
+	notificationWorker := worker.NewNotificationWorker(store, interval)
+	outboxWorker := worker.NewOutboxWorker(store, lifecycleProducer, notificationProducer, 500*time.Millisecond)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go workerInstance.Start(ctx)
+	go notificationWorker.Start(ctx)
+	go outboxWorker.Start(ctx)
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
