@@ -40,8 +40,18 @@ func main() {
 	defer reminderClient.Close()
 	log.Printf("API Gateway: Connected to Reminder Service (%s)\n", reminderServiceAddr)
 
+	// Connect to Analytics Service
+	analyticsServiceAddr := getEnv("ANALYTICS_SERVICE_ADDR", "analytics-service:50053")
+	analyticsClient, err := client.NewAnalyticsClient(analyticsServiceAddr)
+	if err != nil {
+		log.Fatalf("Failed to connect to Analytics Service: %v", err)
+	}
+	defer analyticsClient.Close()
+	log.Printf("API Gateway: Connected to Analytics Service (%s)\n", analyticsServiceAddr)
+
 	authHandler := handlers.NewAuthHandler(authClient)
 	reminderHandler := handlers.NewReminderHandler(reminderClient)
+	analyticsHandler := handlers.NewAnalyticsHandler(analyticsClient)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -63,6 +73,8 @@ func main() {
 	protected.PUT("/reminders/:id", reminderHandler.Update)
 	protected.DELETE("/reminders/:id", reminderHandler.Delete)
 
+	protected.GET("/analytics/me", analyticsHandler.GetMyStats)
+
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
@@ -80,6 +92,7 @@ func main() {
 	log.Println("   GET    /reminders/:id   - Get reminder (protected)")
 	log.Println("   PUT    /reminders/:id   - Update reminder (protected)")
 	log.Println("   DELETE /reminders/:id   - Delete reminder (protected)")
+	log.Println("   GET    /analytics/me    - Get user stats (protected)")
 	log.Println("   GET    /health          - Health check")
 
 	go func() {
