@@ -25,7 +25,6 @@ type ReminderStorage interface {
 	CreateNotificationEventsAndMarkSent(reminder models.Reminder) error
 }
 
-// OutboxEvent represents an event waiting to be sent to Kafka
 type OutboxEvent struct {
 	ID          int64           `db:"id"`
 	EventType   string          `db:"event_type"`
@@ -43,7 +42,6 @@ func NewPostgresStorage(db *sqlx.DB) *PostgresStorage {
 	return &PostgresStorage{db: db}
 }
 
-// createOutboxEvent inserts an event into the outbox table within a transaction
 func (s *PostgresStorage) createOutboxEvent(tx *sqlx.Tx, eventType string, userID, aggregateID int64, payload interface{}) error {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
@@ -276,7 +274,8 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 	}
 	defer tx.Rollback()
 
-	payloadJSON, err := json.Marshal(reminder)
+	// notification_trigger: raw Reminder for notification-service
+	reminderJSON, err := json.Marshal(reminder)
 	if err != nil {
 		return fmt.Errorf("failed to marshal reminder: %w", err)
 	}
@@ -284,16 +283,29 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 	_, err = tx.Exec(`
 		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
 		VALUES ('notification_trigger', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, payloadJSON,
+		reminder.ID, reminder.UserID, reminderJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_trigger event: %w", err)
 	}
 
+	// notification_sent: LifecycleEvent for analytics-service
+	lifecycleEvent := models.LifecycleEvent{
+		EventType:  "notification_sent",
+		ReminderID: reminder.ID,
+		UserID:     reminder.UserID,
+		Timestamp:  time.Now(),
+		Payload:    reminder,
+	}
+	lifecycleJSON, err := json.Marshal(lifecycleEvent)
+	if err != nil {
+		return fmt.Errorf("failed to marshal lifecycle event: %w", err)
+	}
+
 	_, err = tx.Exec(`
 		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
 		VALUES ('notification_sent', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, payloadJSON,
+		reminder.ID, reminder.UserID, lifecycleJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_sent event: %w", err)
