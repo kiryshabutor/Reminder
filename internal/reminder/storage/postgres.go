@@ -283,10 +283,11 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 		return fmt.Errorf("failed to marshal reminder: %w", err)
 	}
 
+	outboxID := uuid.Must(uuid.NewV7())
 	_, err = tx.Exec(`
-		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
-		VALUES ('notification_trigger', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, reminderJSON,
+		INSERT INTO reminders_outbox (id, event_type, aggregate_id, user_id, payload)
+		VALUES ($1, 'notification_trigger', $2, $3, $4)`,
+		outboxID, reminder.ID, reminder.UserID, reminderJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_trigger event: %w", err)
@@ -300,15 +301,16 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 		Timestamp:  time.Now(),
 		Payload:    reminder,
 	}
-	lifecycleJSON, err := json.Marshal(lifecycleEvent)
+	lifecycleEventJSON, err := json.Marshal(lifecycleEvent)
 	if err != nil {
 		return fmt.Errorf("failed to marshal lifecycle event: %w", err)
 	}
 
+	lifecycleOutboxID := uuid.Must(uuid.NewV7())
 	_, err = tx.Exec(`
-		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
-		VALUES ('notification_sent', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, lifecycleJSON,
+		INSERT INTO reminders_outbox (id, event_type, aggregate_id, user_id, payload)
+		VALUES ($1, 'notification_sent', $2, $3, $4)`,
+		lifecycleOutboxID, reminder.ID, reminder.UserID, lifecycleEventJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_sent event: %w", err)
