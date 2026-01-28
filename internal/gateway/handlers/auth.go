@@ -91,28 +91,6 @@ func (h *AuthHandler) Profile(c echo.Context) error {
 	})
 }
 
-func (h *AuthHandler) Logout(c echo.Context) error {
-	authHeader := c.Request().Header.Get("Authorization")
-	if authHeader == "" {
-		return c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Authorization header is required"})
-	}
-
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid Authorization header format"})
-	}
-
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
-	defer cancel()
-
-	_, err := h.authClient.Logout(ctx, parts[1])
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to logout"})
-	}
-
-	return c.JSON(http.StatusOK, map[string]string{"message": "Successfully logged out"})
-}
-
 // AuthMiddleware validates the JWT token
 func (h *AuthHandler) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

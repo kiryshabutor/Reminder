@@ -78,7 +78,7 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *pb.ValidateTokenReq
 		}, nil
 	}
 
-	username, userID, err := s.service.ValidateToken(ctx, req.AccessToken)
+	username, userID, err := s.service.ValidateToken(req.AccessToken)
 	if err != nil {
 		return &pb.ValidateTokenResponse{
 			Valid: false,
@@ -91,16 +91,4 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *pb.ValidateTokenReq
 		Username: username,
 		UserId:   userID.String(),
 	}, nil
-}
-
-func (s *AuthServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
-	if req.Token == "" {
-		return nil, status.Error(codes.InvalidArgument, "token is required")
-	}
-
-	if err := s.service.Logout(ctx, req.Token); err != nil {
-		return nil, status.Error(codes.Internal, "failed to logout")
-	}
-
-	return &pb.LogoutResponse{Success: true}, nil
 }

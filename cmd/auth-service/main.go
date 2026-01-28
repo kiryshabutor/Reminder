@@ -13,7 +13,6 @@ import (
 	"github.com/kiribu/jwt-practice/internal/auth/grpc/pb"
 	"github.com/kiribu/jwt-practice/internal/auth/service"
 	"github.com/kiribu/jwt-practice/internal/auth/storage"
-	"github.com/kiribu/jwt-practice/pkg/redis"
 	"google.golang.org/grpc"
 )
 
@@ -34,17 +33,8 @@ func main() {
 
 	log.Println("Auth Service: Successfully connected to PostgreSQL")
 
-	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
-	redisPassword := getEnv("REDIS_PASSWORD", "")
-	redisClient, err := redis.NewRedisClient(redisAddr, redisPassword)
-	if err != nil {
-		log.Fatalf("Redis connection error: %v", err)
-	}
-	defer redisClient.Close()
-	log.Println("Auth Service: Successfully connected to Redis")
-
 	store := storage.NewPostgresStorage(db)
-	authService := service.NewAuthService(store, redisClient)
+	authService := service.NewAuthService(store)
 	authServer := authgrpc.NewAuthServer(authService)
 	grpcServer := grpc.NewServer()
 	pb.RegisterAuthServiceServer(grpcServer, authServer)
