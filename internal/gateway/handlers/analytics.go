@@ -18,7 +18,7 @@ func NewAnalyticsHandler(analyticsClient *client.AnalyticsClient) *AnalyticsHand
 }
 
 func (h *AnalyticsHandler) GetStats(c echo.Context) error {
-	userID := c.Get("user_id").(string) // UUID as string
+	userID := c.Get("user_id").(string)
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()

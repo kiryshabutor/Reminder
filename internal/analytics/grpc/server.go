@@ -34,7 +34,7 @@ func (s *AnalyticsServer) GetUserStats(ctx context.Context, req *pb.GetUserStats
 
 func convertToProto(s *models.UserStatistics) *pb.UserStatsResponse {
 	resp := &pb.UserStatsResponse{
-		UserId:                  s.UserID.String(), // UUID to string
+		UserId:                  s.UserID.String(),
 		TotalRemindersCreated:   s.TotalRemindersCreated,
 		TotalRemindersCompleted: s.TotalRemindersCompleted,
 		TotalRemindersDeleted:   s.TotalRemindersDeleted,

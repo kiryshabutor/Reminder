@@ -47,7 +47,6 @@ func main() {
 	go consumer.Start()
 	defer consumer.Close()
 
-	// 4. gRPC Server Init
 	grpcPort := getEnv("ANALYTICS_GRPC_PORT", "50053")
 	listener, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
@@ -59,7 +58,6 @@ func main() {
 
 	log.Printf("Analytics Service (gRPC) started on port %s\n", grpcPort)
 
-	// 5. Graceful Shutdown
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
 			log.Fatalf("gRPC server error: %v", err)

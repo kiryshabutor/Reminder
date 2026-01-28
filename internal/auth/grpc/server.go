@@ -30,7 +30,7 @@ func (s *AuthServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb
 	}
 
 	return &pb.RegisterResponse{
-		Id:        user.ID.String(), // UUID to string
+		Id:        user.ID.String(),
 		Username:  user.Username,
 		CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
@@ -89,6 +89,6 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *pb.ValidateTokenReq
 	return &pb.ValidateTokenResponse{
 		Valid:    true,
 		Username: username,
-		UserId:   userID.String(), // UUID to string
+		UserId:   userID.String(),
 	}, nil
 }

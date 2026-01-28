@@ -32,8 +32,7 @@ type UpdateReminderRequest struct {
 }
 
 func (h *ReminderHandler) Create(c echo.Context) error {
-	userID := c.Get("user_id").(string) // UUID as string
-
+	userID := c.Get("user_id").(string)
 	var req CreateReminderRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request format"})
@@ -51,8 +50,8 @@ func (h *ReminderHandler) Create(c echo.Context) error {
 }
 
 func (h *ReminderHandler) List(c echo.Context) error {
-	userID := c.Get("user_id").(string) // UUID as string
-	status := c.QueryParam("status")    // "pending", "sent", or empty for all
+	userID := c.Get("user_id").(string)
+	status := c.QueryParam("status")
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
