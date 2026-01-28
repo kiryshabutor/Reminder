@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kiribu/jwt-practice/models"
 	"golang.org/x/crypto/bcrypt"
@@ -12,10 +13,10 @@ import (
 type Storage interface {
 	CreateUser(username, password string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
-	GetUserByID(id int) (*models.User, error)
+	GetUserByID(id uuid.UUID) (*models.User, error)
 	ValidatePassword(username, password string) (*models.User, error)
-	SaveRefreshToken(token string, userID int, expiresAt time.Time) error
-	ValidateRefreshToken(token string) (int, error)
+	SaveRefreshToken(token string, userID uuid.UUID, expiresAt time.Time) error
+	ValidateRefreshToken(token string) (uuid.UUID, error)
 	DeleteRefreshToken(token string) error
 }
 
@@ -33,12 +34,13 @@ func (s *PostgresStorage) CreateUser(username, password string) (*models.User, e
 		return nil, err
 	}
 
+	userID := uuid.Must(uuid.NewV7())
 	var user models.User
 	err = s.db.QueryRowx(
-		`INSERT INTO users (username, password_hash) 
-		 VALUES ($1, $2) 
+		`INSERT INTO users (id, username, password_hash) 
+		 VALUES ($1, $2, $3) 
 		 RETURNING id, username, password_hash, created_at`,
-		username, string(hashedPassword),
+		userID, username, string(hashedPassword),
 	).StructScan(&user)
 
 	if err != nil {
@@ -56,7 +58,7 @@ func (s *PostgresStorage) GetUserByUsername(username string) (*models.User, erro
 	}
 	return &user, nil
 }
-func (s *PostgresStorage) GetUserByID(id int) (*models.User, error) {
+func (s *PostgresStorage) GetUserByID(id uuid.UUID) (*models.User, error) {
 	var user models.User
 	err := s.db.Get(&user, "SELECT * FROM users WHERE id = $1", id)
 	if err != nil {
@@ -78,17 +80,18 @@ func (s *PostgresStorage) ValidatePassword(username, password string) (*models.U
 	return user, nil
 }
 
-func (s *PostgresStorage) SaveRefreshToken(token string, userID int, expiresAt time.Time) error {
+func (s *PostgresStorage) SaveRefreshToken(token string, userID uuid.UUID, expiresAt time.Time) error {
+	tokenID := uuid.Must(uuid.NewV7())
 	_, err := s.db.Exec(
-		`INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)`,
-		token, userID, expiresAt,
+		`INSERT INTO refresh_tokens (id, token, user_id, expires_at) VALUES ($1, $2, $3, $4)`,
+		tokenID, token, userID, expiresAt,
 	)
 	return err
 }
 
-func (s *PostgresStorage) ValidateRefreshToken(token string) (int, error) {
+func (s *PostgresStorage) ValidateRefreshToken(token string) (uuid.UUID, error) {
 	var rt struct {
-		UserID    int       `db:"user_id"`
+		UserID    uuid.UUID `db:"user_id"`
 		ExpiresAt time.Time `db:"expires_at"`
 	}
 
@@ -97,12 +100,12 @@ func (s *PostgresStorage) ValidateRefreshToken(token string) (int, error) {
 		token,
 	)
 	if err != nil {
-		return 0, errors.New("token not found")
+		return uuid.Nil, errors.New("token not found")
 	}
 
 	if time.Now().After(rt.ExpiresAt) {
 		s.DeleteRefreshToken(token)
-		return 0, errors.New("token expired")
+		return uuid.Nil, errors.New("token expired")
 	}
 
 	return rt.UserID, nil
