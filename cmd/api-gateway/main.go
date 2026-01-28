@@ -65,6 +65,7 @@ func main() {
 
 	protected := e.Group("")
 	protected.Use(authHandler.AuthMiddleware)
+	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/profile", authHandler.Profile)
 
 	protected.POST("/reminders", reminderHandler.Create)
@@ -86,6 +87,7 @@ func main() {
 	log.Println("   POST   /register        - Registration")
 	log.Println("   POST   /login           - Login")
 	log.Println("   POST   /refresh         - Token refresh")
+	log.Println("   POST   /auth/logout     - Logout (protected)")
 	log.Println("   GET    /profile         - Profile (protected)")
 	log.Println("   POST   /reminders       - Create reminder (protected)")
 	log.Println("   GET    /reminders       - List reminders (protected)")

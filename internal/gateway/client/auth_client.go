@@ -61,3 +61,9 @@ func (c *AuthClient) ValidateToken(ctx context.Context, accessToken string) (*pb
 		AccessToken: accessToken,
 	})
 }
+
+func (c *AuthClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
+	return c.client.Logout(ctx, &pb.LogoutRequest{
+		Token: token,
+	})
+}
