@@ -38,7 +38,7 @@ func (c *AnalyticsClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *AnalyticsClient) GetUserStats(ctx context.Context, userID int64) (*pb.UserStatsResponse, error) {
+func (c *AnalyticsClient) GetUserStats(ctx context.Context, userID string) (*pb.UserStatsResponse, error) {
 	req := &pb.GetUserStatsRequest{
 		UserId: userID,
 	}

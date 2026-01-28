@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/gateway/client"
@@ -33,7 +32,7 @@ type UpdateReminderRequest struct {
 }
 
 func (h *ReminderHandler) Create(c echo.Context) error {
-	userID := c.Get("user_id").(int64)
+	userID := c.Get("user_id").(string) // UUID as string
 
 	var req CreateReminderRequest
 	if err := c.Bind(&req); err != nil {
@@ -52,8 +51,8 @@ func (h *ReminderHandler) Create(c echo.Context) error {
 }
 
 func (h *ReminderHandler) List(c echo.Context) error {
-	userID := c.Get("user_id").(int64)
-	status := c.QueryParam("status") // "pending", "sent", or empty for all
+	userID := c.Get("user_id").(string) // UUID as string
+	status := c.QueryParam("status")    // "pending", "sent", or empty for all
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
@@ -67,11 +66,9 @@ func (h *ReminderHandler) List(c echo.Context) error {
 }
 
 func (h *ReminderHandler) Get(c echo.Context) error {
-	userID := c.Get("user_id").(int64)
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid reminder ID"})
-	}
+	userID := c.Get("user_id").(string) // UUID as string
+	// Parse UUID from URL parameter
+	id := c.Param("id") // UUID string from URL
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
@@ -85,11 +82,9 @@ func (h *ReminderHandler) Get(c echo.Context) error {
 }
 
 func (h *ReminderHandler) Update(c echo.Context) error {
-	userID := c.Get("user_id").(int64)
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid reminder ID"})
-	}
+	userID := c.Get("user_id").(string) // UUID as string
+	// Parse UUID from URL parameter
+	id := c.Param("id") // UUID string from URL
 
 	var req UpdateReminderRequest
 	if err := c.Bind(&req); err != nil {
@@ -108,11 +103,9 @@ func (h *ReminderHandler) Update(c echo.Context) error {
 }
 
 func (h *ReminderHandler) Delete(c echo.Context) error {
-	userID := c.Get("user_id").(int64)
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid reminder ID"})
-	}
+	userID := c.Get("user_id").(string) // UUID as string
+	// Parse UUID from URL parameter
+	id := c.Param("id") // UUID string from URL
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
