@@ -46,7 +46,7 @@ func (s *AuthService) Login(username, password string) (*TokenResponse, error) {
 		return nil, err
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.Username)
+	accessToken, err := utils.GenerateAccessToken(user.Username, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (s *AuthService) Refresh(refreshToken string) (*TokenResponse, error) {
 		return nil, err
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.Username)
+	accessToken, err := utils.GenerateAccessToken(user.Username, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
