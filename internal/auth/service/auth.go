@@ -1,21 +1,31 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log"
 	"errors"
 	"regexp"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/auth/storage"
+	"github.com/kiribu/jwt-practice/models"
 	"github.com/kiribu/jwt-practice/utils"
+	"github.com/redis/go-redis/v9"
 )
 
 type AuthService struct {
 	store storage.Storage
+	redis *redis.Client
 }
 
-func NewAuthService(store storage.Storage) *AuthService {
-	return &AuthService{store: store}
+func NewAuthService(store storage.Storage, redisClient *redis.Client) *AuthService {
+	return &AuthService{
+		store: store,
+		redis: redisClient,
+	}
 }
 
 type UserResponse struct {
@@ -118,18 +128,48 @@ func (s *AuthService) Refresh(refreshToken string) (*TokenResponse, error) {
 	}, nil
 }
 
-func (s *AuthService) ValidateToken(token string) (string, uuid.UUID, error) {
+func (s *AuthService) ValidateToken(ctx context.Context, token string) (string, uuid.UUID, error) {
+	// Check Blacklist
+	val, err := s.redis.Get(ctx, "blacklist:"+token).Result()
+	if err == nil && val == "revoked" {
+		log.Printf("Blacklist hit for token %s", token)
+		return "", uuid.Nil, errors.New("token revoked")
+	}
+
 	claims, err := utils.ValidateAccessToken(token)
 	if err != nil {
 		return "", uuid.Nil, err
 	}
 
+	// Check User Cache
+	cacheKey := "user:" + claims.Username
+	val, err = s.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		// Cache Hit
+		log.Printf("Cache hit for user %s", claims.Username)
+		var user models.User
+		if err := json.Unmarshal([]byte(val), &user); err == nil {
+			return user.Username, user.ID, nil
+		}
+	}
+
+	// Cache Miss
+	log.Printf("Cache miss for user %s", claims.Username)
 	user, err := s.store.GetUserByUsername(claims.Username)
 	if err != nil {
 		return "", uuid.Nil, err
 	}
 
+	// Set Cache
+	if userJSON, err := json.Marshal(user); err == nil {
+		s.redis.Set(ctx, cacheKey, userJSON, utils.AccessTokenDuration)
+	}
+
 	return claims.Username, user.ID, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, token string) error {
+	return s.redis.Set(ctx, "blacklist:"+token, "revoked", utils.AccessTokenDuration).Err()
 }
 
 func (s *AuthService) validateCredentials(username, password string) error {
