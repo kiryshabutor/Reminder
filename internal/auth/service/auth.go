@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,7 +29,21 @@ type TokenResponse struct {
 	TokenType    string
 }
 
+var (
+	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,255}$`)
+	passwordRegex = regexp.MustCompile(`^[a-zA-Z0-9!#$%*]{8,16}$`)
+
+	// Password complexity checks
+	hasLetterRegex  = regexp.MustCompile(`[a-zA-Z]`)
+	hasDigitRegex   = regexp.MustCompile(`[0-9]`)
+	hasSpecialRegex = regexp.MustCompile(`[!#$%*]`)
+)
+
 func (s *AuthService) Register(username, password string) (*UserResponse, error) {
+	if err := s.validateCredentials(username, password); err != nil {
+		return nil, err
+	}
+
 	user, err := s.store.CreateUser(username, password)
 	if err != nil {
 		return nil, err
@@ -114,4 +130,20 @@ func (s *AuthService) ValidateToken(token string) (string, uuid.UUID, error) {
 	}
 
 	return claims.Username, user.ID, nil
+}
+
+func (s *AuthService) validateCredentials(username, password string) error {
+	if !usernameRegex.MatchString(username) {
+		return errors.New("invalid username format: must be 3-255 alphanumeric characters or underscore")
+	}
+
+	if !passwordRegex.MatchString(password) {
+		return errors.New("invalid password format: must be 8-16 characters and contain only alphanumeric or !#$%*")
+	}
+
+	if !hasLetterRegex.MatchString(password) || !hasDigitRegex.MatchString(password) || !hasSpecialRegex.MatchString(password) {
+		return errors.New("password must contain at least one letter, one digit, and one special character (!#$%*)")
+	}
+
+	return nil
 }
