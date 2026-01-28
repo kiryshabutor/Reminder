@@ -4,15 +4,16 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kiribu/jwt-practice/models"
 )
 
 type AnalyticsStorage interface {
-	GetUserStats(ctx context.Context, userID int64) (*models.UserStatistics, error)
-	IncrementCreated(ctx context.Context, userID int64, timestamp time.Time) error
-	IncrementCompleted(ctx context.Context, userID int64, timestamp time.Time) error
-	IncrementDeleted(ctx context.Context, userID int64, timestamp time.Time) error
+	GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error)
+	IncrementCreated(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
+	IncrementCompleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
+	IncrementDeleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
 }
 
 type PostgresStorage struct {
@@ -23,7 +24,7 @@ func NewPostgresStorage(db *sqlx.DB) *PostgresStorage {
 	return &PostgresStorage{db: db}
 }
 
-func (s *PostgresStorage) GetUserStats(ctx context.Context, userID int64) (*models.UserStatistics, error) {
+func (s *PostgresStorage) GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error) {
 	var stats models.UserStatistics
 	query := `SELECT * FROM analytics.user_statistics WHERE user_id = $1`
 	err := s.db.GetContext(ctx, &stats, query, userID)
@@ -33,7 +34,7 @@ func (s *PostgresStorage) GetUserStats(ctx context.Context, userID int64) (*mode
 	return &stats, nil
 }
 
-func (s *PostgresStorage) IncrementCreated(ctx context.Context, userID int64, timestamp time.Time) error {
+func (s *PostgresStorage) IncrementCreated(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		INSERT INTO analytics.user_statistics (user_id, total_reminders_created, active_reminders, first_reminder_at, last_activity_at)
 		VALUES ($1, 1, 1, $2, $2)
@@ -52,7 +53,7 @@ func (s *PostgresStorage) IncrementCreated(ctx context.Context, userID int64, ti
 	return err
 }
 
-func (s *PostgresStorage) IncrementCompleted(ctx context.Context, userID int64, timestamp time.Time) error {
+func (s *PostgresStorage) IncrementCompleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		UPDATE analytics.user_statistics SET
 			total_reminders_completed = total_reminders_completed + 1,
@@ -70,7 +71,7 @@ func (s *PostgresStorage) IncrementCompleted(ctx context.Context, userID int64, 
 	return err
 }
 
-func (s *PostgresStorage) IncrementDeleted(ctx context.Context, userID int64, timestamp time.Time) error {
+func (s *PostgresStorage) IncrementDeleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		UPDATE analytics.user_statistics SET
 			total_reminders_deleted = total_reminders_deleted + 1,

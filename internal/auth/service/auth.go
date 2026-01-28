@@ -3,6 +3,7 @@ package service
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/auth/storage"
 	"github.com/kiribu/jwt-practice/utils"
 )
@@ -16,7 +17,7 @@ func NewAuthService(store storage.Storage) *AuthService {
 }
 
 type UserResponse struct {
-	ID        int64
+	ID        uuid.UUID
 	Username  string
 	CreatedAt time.Time
 }
@@ -33,7 +34,7 @@ func (s *AuthService) Register(username, password string) (*UserResponse, error)
 	}
 
 	return &UserResponse{
-		ID:        int64(user.ID),
+		ID:        user.ID,
 		Username:  user.Username,
 		CreatedAt: user.CreatedAt,
 	}, nil
@@ -45,7 +46,7 @@ func (s *AuthService) Login(username, password string) (*TokenResponse, error) {
 		return nil, err
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.Username)
+	accessToken, err := utils.GenerateAccessToken(user.Username, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (s *AuthService) Refresh(refreshToken string) (*TokenResponse, error) {
 		return nil, err
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.Username)
+	accessToken, err := utils.GenerateAccessToken(user.Username, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -101,16 +102,16 @@ func (s *AuthService) Refresh(refreshToken string) (*TokenResponse, error) {
 	}, nil
 }
 
-func (s *AuthService) ValidateToken(token string) (string, int64, error) {
+func (s *AuthService) ValidateToken(token string) (string, uuid.UUID, error) {
 	claims, err := utils.ValidateAccessToken(token)
 	if err != nil {
-		return "", 0, err
+		return "", uuid.Nil, err
 	}
 
 	user, err := s.store.GetUserByUsername(claims.Username)
 	if err != nil {
-		return "", 0, err
+		return "", uuid.Nil, err
 	}
 
-	return claims.Username, int64(user.ID), nil
+	return claims.Username, user.ID, nil
 }

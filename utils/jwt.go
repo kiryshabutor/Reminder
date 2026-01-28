@@ -23,6 +23,7 @@ const (
 
 type Claims struct {
 	Username string `json:"username"`
+	UserID   string `json:"user_id"` // UUID as string
 	jwt.RegisteredClaims
 }
 
@@ -34,9 +35,10 @@ func getAccessSecret() []byte {
 	return accessSecret
 }
 
-func GenerateAccessToken(username string) (string, error) {
+func GenerateAccessToken(username, userID string) (string, error) {
 	claims := &Claims{
 		Username: username,
+		UserID:   userID, // Store UUID as string
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

@@ -23,7 +23,7 @@ const (
 
 type GetUserStatsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -58,16 +58,16 @@ func (*GetUserStatsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_analytics_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetUserStatsRequest) GetUserId() int64 {
+func (x *GetUserStatsRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 type UserStatsResponse struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
-	UserId                  int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId                  string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
 	TotalRemindersCreated   int64                  `protobuf:"varint,2,opt,name=total_reminders_created,json=totalRemindersCreated,proto3" json:"total_reminders_created,omitempty"`
 	TotalRemindersCompleted int64                  `protobuf:"varint,3,opt,name=total_reminders_completed,json=totalRemindersCompleted,proto3" json:"total_reminders_completed,omitempty"`
 	TotalRemindersDeleted   int64                  `protobuf:"varint,4,opt,name=total_reminders_deleted,json=totalRemindersDeleted,proto3" json:"total_reminders_deleted,omitempty"`
@@ -109,11 +109,11 @@ func (*UserStatsResponse) Descriptor() ([]byte, []int) {
 	return file_proto_analytics_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *UserStatsResponse) GetUserId() int64 {
+func (x *UserStatsResponse) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 func (x *UserStatsResponse) GetTotalRemindersCreated() int64 {
@@ -171,9 +171,9 @@ const file_proto_analytics_proto_rawDesc = "" +
 	"\n" +
 	"\x15proto/analytics.proto\x12\tanalytics\".\n" +
 	"\x13GetUserStatsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\x82\x03\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x82\x03\n" +
 	"\x11UserStatsResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x126\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x126\n" +
 	"\x17total_reminders_created\x18\x02 \x01(\x03R\x15totalRemindersCreated\x12:\n" +
 	"\x19total_reminders_completed\x18\x03 \x01(\x03R\x17totalRemindersCompleted\x126\n" +
 	"\x17total_reminders_deleted\x18\x04 \x01(\x03R\x15totalRemindersDeleted\x12)\n" +

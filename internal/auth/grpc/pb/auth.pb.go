@@ -75,7 +75,7 @@ func (x *RegisterRequest) GetPassword() string {
 
 type RegisterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // UUID as string
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -112,11 +112,11 @@ func (*RegisterResponse) Descriptor() ([]byte, []int) {
 	return file_proto_auth_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *RegisterResponse) GetId() int64 {
+func (x *RegisterResponse) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *RegisterResponse) GetUsername() string {
@@ -397,7 +397,7 @@ type ValidateTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	UserId        int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
 	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -447,11 +447,11 @@ func (x *ValidateTokenResponse) GetUsername() string {
 	return ""
 }
 
-func (x *ValidateTokenResponse) GetUserId() int64 {
+func (x *ValidateTokenResponse) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 func (x *ValidateTokenResponse) GetError() string {
@@ -470,7 +470,7 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"]\n" +
 	"\x10RegisterResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x03 \x01(\tR\tcreatedAt\"F\n" +
@@ -494,7 +494,7 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\x15ValidateTokenResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\x03R\x06userId\x12\x14\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05error\x18\x04 \x01(\tR\x05error2\xfc\x01\n" +
 	"\vAuthService\x129\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x16.auth.RegisterResponse\x120\n" +

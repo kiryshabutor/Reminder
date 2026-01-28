@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v3.21.12
-// source: reminder.proto
+// source: proto/reminder.proto
 
 package pb
 
@@ -23,7 +23,7 @@ const (
 
 type CreateReminderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	RemindAt      string                 `protobuf:"bytes,4,opt,name=remind_at,json=remindAt,proto3" json:"remind_at,omitempty"`
@@ -33,7 +33,7 @@ type CreateReminderRequest struct {
 
 func (x *CreateReminderRequest) Reset() {
 	*x = CreateReminderRequest{}
-	mi := &file_reminder_proto_msgTypes[0]
+	mi := &file_proto_reminder_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +45,7 @@ func (x *CreateReminderRequest) String() string {
 func (*CreateReminderRequest) ProtoMessage() {}
 
 func (x *CreateReminderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[0]
+	mi := &file_proto_reminder_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,14 +58,14 @@ func (x *CreateReminderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateReminderRequest.ProtoReflect.Descriptor instead.
 func (*CreateReminderRequest) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{0}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CreateReminderRequest) GetUserId() int64 {
+func (x *CreateReminderRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 func (x *CreateReminderRequest) GetTitle() string {
@@ -91,15 +91,15 @@ func (x *CreateReminderRequest) GetRemindAt() string {
 
 type GetRemindersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // "pending", "sent", or empty for all
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`               // "pending", "sent", or empty for all
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetRemindersRequest) Reset() {
 	*x = GetRemindersRequest{}
-	mi := &file_reminder_proto_msgTypes[1]
+	mi := &file_proto_reminder_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -111,7 +111,7 @@ func (x *GetRemindersRequest) String() string {
 func (*GetRemindersRequest) ProtoMessage() {}
 
 func (x *GetRemindersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[1]
+	mi := &file_proto_reminder_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,14 +124,14 @@ func (x *GetRemindersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRemindersRequest.ProtoReflect.Descriptor instead.
 func (*GetRemindersRequest) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{1}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetRemindersRequest) GetUserId() int64 {
+func (x *GetRemindersRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetRemindersRequest) GetStatus() string {
@@ -143,15 +143,15 @@ func (x *GetRemindersRequest) GetStatus() string {
 
 type GetReminderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
+	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`                       // UUID as string
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetReminderRequest) Reset() {
 	*x = GetReminderRequest{}
-	mi := &file_reminder_proto_msgTypes[2]
+	mi := &file_proto_reminder_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -163,7 +163,7 @@ func (x *GetReminderRequest) String() string {
 func (*GetReminderRequest) ProtoMessage() {}
 
 func (x *GetReminderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[2]
+	mi := &file_proto_reminder_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -176,27 +176,27 @@ func (x *GetReminderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetReminderRequest.ProtoReflect.Descriptor instead.
 func (*GetReminderRequest) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{2}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetReminderRequest) GetUserId() int64 {
+func (x *GetReminderRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
-func (x *GetReminderRequest) GetId() int64 {
+func (x *GetReminderRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 type UpdateReminderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
+	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`                       // UUID as string
 	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	RemindAt      string                 `protobuf:"bytes,5,opt,name=remind_at,json=remindAt,proto3" json:"remind_at,omitempty"`
@@ -206,7 +206,7 @@ type UpdateReminderRequest struct {
 
 func (x *UpdateReminderRequest) Reset() {
 	*x = UpdateReminderRequest{}
-	mi := &file_reminder_proto_msgTypes[3]
+	mi := &file_proto_reminder_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -218,7 +218,7 @@ func (x *UpdateReminderRequest) String() string {
 func (*UpdateReminderRequest) ProtoMessage() {}
 
 func (x *UpdateReminderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[3]
+	mi := &file_proto_reminder_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,21 +231,21 @@ func (x *UpdateReminderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateReminderRequest.ProtoReflect.Descriptor instead.
 func (*UpdateReminderRequest) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{3}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *UpdateReminderRequest) GetUserId() int64 {
+func (x *UpdateReminderRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
-func (x *UpdateReminderRequest) GetId() int64 {
+func (x *UpdateReminderRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *UpdateReminderRequest) GetTitle() string {
@@ -271,15 +271,15 @@ func (x *UpdateReminderRequest) GetRemindAt() string {
 
 type DeleteReminderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
+	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`                       // UUID as string
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeleteReminderRequest) Reset() {
 	*x = DeleteReminderRequest{}
-	mi := &file_reminder_proto_msgTypes[4]
+	mi := &file_proto_reminder_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -291,7 +291,7 @@ func (x *DeleteReminderRequest) String() string {
 func (*DeleteReminderRequest) ProtoMessage() {}
 
 func (x *DeleteReminderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[4]
+	mi := &file_proto_reminder_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -304,27 +304,27 @@ func (x *DeleteReminderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteReminderRequest.ProtoReflect.Descriptor instead.
 func (*DeleteReminderRequest) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{4}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *DeleteReminderRequest) GetUserId() int64 {
+func (x *DeleteReminderRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
-func (x *DeleteReminderRequest) GetId() int64 {
+func (x *DeleteReminderRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 type ReminderResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                       // UUID as string
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // UUID as string
 	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	RemindAt      string                 `protobuf:"bytes,5,opt,name=remind_at,json=remindAt,proto3" json:"remind_at,omitempty"`
@@ -337,7 +337,7 @@ type ReminderResponse struct {
 
 func (x *ReminderResponse) Reset() {
 	*x = ReminderResponse{}
-	mi := &file_reminder_proto_msgTypes[5]
+	mi := &file_proto_reminder_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -349,7 +349,7 @@ func (x *ReminderResponse) String() string {
 func (*ReminderResponse) ProtoMessage() {}
 
 func (x *ReminderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[5]
+	mi := &file_proto_reminder_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -362,21 +362,21 @@ func (x *ReminderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReminderResponse.ProtoReflect.Descriptor instead.
 func (*ReminderResponse) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{5}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ReminderResponse) GetId() int64 {
+func (x *ReminderResponse) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
-func (x *ReminderResponse) GetUserId() int64 {
+func (x *ReminderResponse) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
-	return 0
+	return ""
 }
 
 func (x *ReminderResponse) GetTitle() string {
@@ -430,7 +430,7 @@ type GetRemindersResponse struct {
 
 func (x *GetRemindersResponse) Reset() {
 	*x = GetRemindersResponse{}
-	mi := &file_reminder_proto_msgTypes[6]
+	mi := &file_proto_reminder_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +442,7 @@ func (x *GetRemindersResponse) String() string {
 func (*GetRemindersResponse) ProtoMessage() {}
 
 func (x *GetRemindersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[6]
+	mi := &file_proto_reminder_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +455,7 @@ func (x *GetRemindersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRemindersResponse.ProtoReflect.Descriptor instead.
 func (*GetRemindersResponse) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{6}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetRemindersResponse) GetReminders() []*ReminderResponse {
@@ -475,7 +475,7 @@ type DeleteReminderResponse struct {
 
 func (x *DeleteReminderResponse) Reset() {
 	*x = DeleteReminderResponse{}
-	mi := &file_reminder_proto_msgTypes[7]
+	mi := &file_proto_reminder_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -487,7 +487,7 @@ func (x *DeleteReminderResponse) String() string {
 func (*DeleteReminderResponse) ProtoMessage() {}
 
 func (x *DeleteReminderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_reminder_proto_msgTypes[7]
+	mi := &file_proto_reminder_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -500,7 +500,7 @@ func (x *DeleteReminderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteReminderResponse.ProtoReflect.Descriptor instead.
 func (*DeleteReminderResponse) Descriptor() ([]byte, []int) {
-	return file_reminder_proto_rawDescGZIP(), []int{7}
+	return file_proto_reminder_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteReminderResponse) GetSuccess() bool {
@@ -517,34 +517,34 @@ func (x *DeleteReminderResponse) GetMessage() string {
 	return ""
 }
 
-var File_reminder_proto protoreflect.FileDescriptor
+var File_proto_reminder_proto protoreflect.FileDescriptor
 
-const file_reminder_proto_rawDesc = "" +
+const file_proto_reminder_proto_rawDesc = "" +
 	"\n" +
-	"\x0ereminder.proto\x12\breminder\"\x85\x01\n" +
+	"\x14proto/reminder.proto\x12\breminder\"\x85\x01\n" +
 	"\x15CreateReminderRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x14\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1b\n" +
 	"\tremind_at\x18\x04 \x01(\tR\bremindAt\"F\n" +
 	"\x13GetRemindersRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"=\n" +
 	"\x12GetReminderRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x03R\x02id\"\x95\x01\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\"\x95\x01\n" +
 	"\x15UpdateReminderRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x03R\x02id\x12\x14\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1b\n" +
 	"\tremind_at\x18\x05 \x01(\tR\bremindAt\"@\n" +
 	"\x15DeleteReminderRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\x03R\x02id\"\xe7\x01\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\"\xe7\x01\n" +
 	"\x10ReminderResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1b\n" +
 	"\tremind_at\x18\x05 \x01(\tR\bremindAt\x12\x17\n" +
@@ -566,19 +566,19 @@ const file_reminder_proto_rawDesc = "" +
 	"\x0eDeleteReminder\x12\x1f.reminder.DeleteReminderRequest\x1a .reminder.DeleteReminderResponseB:Z8github.com/kiribu/jwt-practice/internal/reminder/grpc/pbb\x06proto3"
 
 var (
-	file_reminder_proto_rawDescOnce sync.Once
-	file_reminder_proto_rawDescData []byte
+	file_proto_reminder_proto_rawDescOnce sync.Once
+	file_proto_reminder_proto_rawDescData []byte
 )
 
-func file_reminder_proto_rawDescGZIP() []byte {
-	file_reminder_proto_rawDescOnce.Do(func() {
-		file_reminder_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_reminder_proto_rawDesc), len(file_reminder_proto_rawDesc)))
+func file_proto_reminder_proto_rawDescGZIP() []byte {
+	file_proto_reminder_proto_rawDescOnce.Do(func() {
+		file_proto_reminder_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_reminder_proto_rawDesc), len(file_proto_reminder_proto_rawDesc)))
 	})
-	return file_reminder_proto_rawDescData
+	return file_proto_reminder_proto_rawDescData
 }
 
-var file_reminder_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
-var file_reminder_proto_goTypes = []any{
+var file_proto_reminder_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_reminder_proto_goTypes = []any{
 	(*CreateReminderRequest)(nil),  // 0: reminder.CreateReminderRequest
 	(*GetRemindersRequest)(nil),    // 1: reminder.GetRemindersRequest
 	(*GetReminderRequest)(nil),     // 2: reminder.GetReminderRequest
@@ -588,7 +588,7 @@ var file_reminder_proto_goTypes = []any{
 	(*GetRemindersResponse)(nil),   // 6: reminder.GetRemindersResponse
 	(*DeleteReminderResponse)(nil), // 7: reminder.DeleteReminderResponse
 }
-var file_reminder_proto_depIdxs = []int32{
+var file_proto_reminder_proto_depIdxs = []int32{
 	5, // 0: reminder.GetRemindersResponse.reminders:type_name -> reminder.ReminderResponse
 	0, // 1: reminder.ReminderService.CreateReminder:input_type -> reminder.CreateReminderRequest
 	1, // 2: reminder.ReminderService.GetReminders:input_type -> reminder.GetRemindersRequest
@@ -607,26 +607,26 @@ var file_reminder_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_reminder_proto_init() }
-func file_reminder_proto_init() {
-	if File_reminder_proto != nil {
+func init() { file_proto_reminder_proto_init() }
+func file_proto_reminder_proto_init() {
+	if File_proto_reminder_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_reminder_proto_rawDesc), len(file_reminder_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_reminder_proto_rawDesc), len(file_proto_reminder_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_reminder_proto_goTypes,
-		DependencyIndexes: file_reminder_proto_depIdxs,
-		MessageInfos:      file_reminder_proto_msgTypes,
+		GoTypes:           file_proto_reminder_proto_goTypes,
+		DependencyIndexes: file_proto_reminder_proto_depIdxs,
+		MessageInfos:      file_proto_reminder_proto_msgTypes,
 	}.Build()
-	File_reminder_proto = out.File
-	file_reminder_proto_goTypes = nil
-	file_reminder_proto_depIdxs = nil
+	File_proto_reminder_proto = out.File
+	file_proto_reminder_proto_goTypes = nil
+	file_proto_reminder_proto_depIdxs = nil
 }

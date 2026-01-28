@@ -9,11 +9,11 @@ service AnalyticsService {
 }
 
 message GetUserStatsRequest {
-  int64 user_id = 1;
+  string user_id = 1;  // UUID as string
 }
 
 message UserStatsResponse {
-  int64 user_id = 1;
+  string user_id = 1;  // UUID as string
   int64 total_reminders_created = 2;
   int64 total_reminders_completed = 3;
   int64 total_reminders_deleted = 4;

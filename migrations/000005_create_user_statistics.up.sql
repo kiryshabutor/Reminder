@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS analytics;
 
 CREATE TABLE IF NOT EXISTS analytics.user_statistics (
-    user_id BIGINT PRIMARY KEY,
+    user_id UUID PRIMARY KEY,
     total_reminders_created INT DEFAULT 0,
     total_reminders_completed INT DEFAULT 0,
     total_reminders_deleted INT DEFAULT 0,

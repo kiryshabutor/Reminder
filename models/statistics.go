@@ -1,9 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type UserStatistics struct {
-	UserID                  int64      `db:"user_id" json:"user_id"`
+	UserID                  uuid.UUID  `db:"user_id" json:"user_id"`
 	TotalRemindersCreated   int64      `db:"total_reminders_created" json:"total_reminders_created"`
 	TotalRemindersCompleted int64      `db:"total_reminders_completed" json:"total_reminders_completed"`
 	TotalRemindersDeleted   int64      `db:"total_reminders_deleted" json:"total_reminders_deleted"`

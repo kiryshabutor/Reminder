@@ -73,7 +73,7 @@ func main() {
 	protected.PUT("/reminders/:id", reminderHandler.Update)
 	protected.DELETE("/reminders/:id", reminderHandler.Delete)
 
-	protected.GET("/analytics/me", analyticsHandler.GetMyStats)
+	protected.GET("/analytics/me", analyticsHandler.GetStats)
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(200, "OK")

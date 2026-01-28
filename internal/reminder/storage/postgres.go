@@ -6,30 +6,31 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kiribu/jwt-practice/models"
 )
 
 type ReminderStorage interface {
-	Create(userID int64, title, description string, remindAt time.Time) (*models.Reminder, error)
-	GetByUserID(userID int64, status string) ([]models.Reminder, error)
-	GetByID(userID, id int64) (*models.Reminder, error)
-	Update(userID, id int64, title, description string, remindAt time.Time) (*models.Reminder, error)
-	Delete(userID, id int64) error
+	Create(userID uuid.UUID, title, description string, remindAt time.Time) (*models.Reminder, error)
+	GetByUserID(userID uuid.UUID, status string) ([]models.Reminder, error)
+	GetByID(userID, id uuid.UUID) (*models.Reminder, error)
+	Update(userID, id uuid.UUID, title, description string, remindAt time.Time) (*models.Reminder, error)
+	Delete(userID, id uuid.UUID) error
 	GetPending() ([]models.Reminder, error)
-	MarkAsSent(id int64) error
+	MarkAsSent(id uuid.UUID) error
 	// Outbox methods
 	GetPendingOutboxEvents(limit int) ([]OutboxEvent, error)
-	MarkOutboxEventAsSent(id int64) error
-	IncrementOutboxRetryCount(id int64, errMsg string) error
+	MarkOutboxEventAsSent(id uuid.UUID) error
+	IncrementOutboxRetryCount(id uuid.UUID, errMsg string) error
 	CreateNotificationEventsAndMarkSent(reminder models.Reminder) error
 }
 
 type OutboxEvent struct {
-	ID          int64           `db:"id"`
+	ID          uuid.UUID       `db:"id"`
 	EventType   string          `db:"event_type"`
-	AggregateID int64           `db:"aggregate_id"`
-	UserID      int64           `db:"user_id"`
+	AggregateID uuid.UUID       `db:"aggregate_id"`
+	UserID      uuid.UUID       `db:"user_id"`
 	Payload     json.RawMessage `db:"payload"`
 	RetryCount  int             `db:"retry_count"`
 }
@@ -42,33 +43,35 @@ func NewPostgresStorage(db *sqlx.DB) *PostgresStorage {
 	return &PostgresStorage{db: db}
 }
 
-func (s *PostgresStorage) createOutboxEvent(tx *sqlx.Tx, eventType string, userID, aggregateID int64, payload interface{}) error {
+func (s *PostgresStorage) createOutboxEvent(tx *sqlx.Tx, eventType string, userID, aggregateID uuid.UUID, payload interface{}) error {
+	outboxID := uuid.Must(uuid.NewV7())
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal outbox payload: %w", err)
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
-		VALUES ($1, $2, $3, $4)`,
-		eventType, aggregateID, userID, payloadJSON,
+		INSERT INTO reminders_outbox (id, event_type, aggregate_id, user_id, payload)
+		VALUES ($1, $2, $3, $4, $5)`,
+		outboxID, eventType, aggregateID, userID, payloadJSON,
 	)
 	return err
 }
 
-func (s *PostgresStorage) Create(userID int64, title, description string, remindAt time.Time) (*models.Reminder, error) {
+func (s *PostgresStorage) Create(userID uuid.UUID, title, description string, remindAt time.Time) (*models.Reminder, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
+	reminderID := uuid.Must(uuid.NewV7())
 	var reminder models.Reminder
 	err = tx.QueryRowx(`
-		INSERT INTO reminders (user_id, title, description, remind_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO reminders (id, user_id, title, description, remind_at)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, user_id, title, description, remind_at, is_sent, created_at, updated_at`,
-		userID, title, description, remindAt,
+		reminderID, userID, title, description, remindAt,
 	).StructScan(&reminder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert reminder: %w", err)
@@ -92,7 +95,7 @@ func (s *PostgresStorage) Create(userID int64, title, description string, remind
 	return &reminder, nil
 }
 
-func (s *PostgresStorage) GetByUserID(userID int64, status string) ([]models.Reminder, error) {
+func (s *PostgresStorage) GetByUserID(userID uuid.UUID, status string) ([]models.Reminder, error) {
 	var reminders []models.Reminder
 	var query string
 	var args []interface{}
@@ -120,7 +123,7 @@ func (s *PostgresStorage) GetByUserID(userID int64, status string) ([]models.Rem
 	return reminders, nil
 }
 
-func (s *PostgresStorage) GetByID(userID, id int64) (*models.Reminder, error) {
+func (s *PostgresStorage) GetByID(userID, id uuid.UUID) (*models.Reminder, error) {
 	var reminder models.Reminder
 	err := s.db.Get(&reminder,
 		`SELECT id, user_id, title, description, remind_at, is_sent, created_at, updated_at
@@ -134,7 +137,7 @@ func (s *PostgresStorage) GetByID(userID, id int64) (*models.Reminder, error) {
 	return &reminder, nil
 }
 
-func (s *PostgresStorage) Update(userID, id int64, title, description string, remindAt time.Time) (*models.Reminder, error) {
+func (s *PostgresStorage) Update(userID, id uuid.UUID, title, description string, remindAt time.Time) (*models.Reminder, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -171,7 +174,7 @@ func (s *PostgresStorage) Update(userID, id int64, title, description string, re
 	return &reminder, nil
 }
 
-func (s *PostgresStorage) Delete(userID, id int64) error {
+func (s *PostgresStorage) Delete(userID, id uuid.UUID) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -222,7 +225,7 @@ func (s *PostgresStorage) GetPending() ([]models.Reminder, error) {
 	return reminders, nil
 }
 
-func (s *PostgresStorage) MarkAsSent(id int64) error {
+func (s *PostgresStorage) MarkAsSent(id uuid.UUID) error {
 	_, err := s.db.Exec(
 		`UPDATE reminders SET is_sent = TRUE, updated_at = NOW() WHERE id = $1`,
 		id,
@@ -244,7 +247,7 @@ func (s *PostgresStorage) GetPendingOutboxEvents(limit int) ([]OutboxEvent, erro
 	return events, err
 }
 
-func (s *PostgresStorage) MarkOutboxEventAsSent(id int64) error {
+func (s *PostgresStorage) MarkOutboxEventAsSent(id uuid.UUID) error {
 	_, err := s.db.Exec(`
 		UPDATE reminders_outbox
 		SET status = 'SENT', processed_at = NOW()
@@ -254,7 +257,7 @@ func (s *PostgresStorage) MarkOutboxEventAsSent(id int64) error {
 	return err
 }
 
-func (s *PostgresStorage) IncrementOutboxRetryCount(id int64, errMsg string) error {
+func (s *PostgresStorage) IncrementOutboxRetryCount(id uuid.UUID, errMsg string) error {
 	_, err := s.db.Exec(`
 		UPDATE reminders_outbox
 		SET retry_count = retry_count + 1,
@@ -280,10 +283,11 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 		return fmt.Errorf("failed to marshal reminder: %w", err)
 	}
 
+	outboxID := uuid.Must(uuid.NewV7())
 	_, err = tx.Exec(`
-		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
-		VALUES ('notification_trigger', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, reminderJSON,
+		INSERT INTO reminders_outbox (id, event_type, aggregate_id, user_id, payload)
+		VALUES ($1, 'notification_trigger', $2, $3, $4)`,
+		outboxID, reminder.ID, reminder.UserID, reminderJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_trigger event: %w", err)
@@ -297,15 +301,16 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 		Timestamp:  time.Now(),
 		Payload:    reminder,
 	}
-	lifecycleJSON, err := json.Marshal(lifecycleEvent)
+	lifecycleEventJSON, err := json.Marshal(lifecycleEvent)
 	if err != nil {
 		return fmt.Errorf("failed to marshal lifecycle event: %w", err)
 	}
 
+	lifecycleOutboxID := uuid.Must(uuid.NewV7())
 	_, err = tx.Exec(`
-		INSERT INTO reminders_outbox (event_type, aggregate_id, user_id, payload)
-		VALUES ('notification_sent', $1, $2, $3)`,
-		reminder.ID, reminder.UserID, lifecycleJSON,
+		INSERT INTO reminders_outbox (id, event_type, aggregate_id, user_id, payload)
+		VALUES ($1, 'notification_sent', $2, $3, $4)`,
+		lifecycleOutboxID, reminder.ID, reminder.UserID, lifecycleEventJSON,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification_sent event: %w", err)

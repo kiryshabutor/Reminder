@@ -3,6 +3,7 @@ package remindergrpc
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/reminder/grpc/pb"
 	"github.com/kiribu/jwt-practice/internal/reminder/service"
 	"github.com/kiribu/jwt-practice/models"
@@ -20,7 +21,12 @@ func NewReminderServer(svc *service.ReminderService) *ReminderServer {
 }
 
 func (s *ReminderServer) CreateReminder(ctx context.Context, req *pb.CreateReminderRequest) (*pb.ReminderResponse, error) {
-	reminder, err := s.service.Create(req.UserId, req.Title, req.Description, req.RemindAt)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
+	}
+
+	reminder, err := s.service.Create(userID, req.Title, req.Description, req.RemindAt)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -29,7 +35,12 @@ func (s *ReminderServer) CreateReminder(ctx context.Context, req *pb.CreateRemin
 }
 
 func (s *ReminderServer) GetReminders(ctx context.Context, req *pb.GetRemindersRequest) (*pb.GetRemindersResponse, error) {
-	reminders, err := s.service.GetByUserID(req.UserId, req.Status)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
+	}
+
+	reminders, err := s.service.GetByUserID(userID, req.Status)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -43,7 +54,16 @@ func (s *ReminderServer) GetReminders(ctx context.Context, req *pb.GetRemindersR
 }
 
 func (s *ReminderServer) GetReminder(ctx context.Context, req *pb.GetReminderRequest) (*pb.ReminderResponse, error) {
-	reminder, err := s.service.GetByID(req.UserId, req.Id)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
+	}
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid id: %v", err)
+	}
+
+	reminder, err := s.service.GetByID(userID, id)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
@@ -52,7 +72,16 @@ func (s *ReminderServer) GetReminder(ctx context.Context, req *pb.GetReminderReq
 }
 
 func (s *ReminderServer) UpdateReminder(ctx context.Context, req *pb.UpdateReminderRequest) (*pb.ReminderResponse, error) {
-	reminder, err := s.service.Update(req.UserId, req.Id, req.Title, req.Description, req.RemindAt)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
+	}
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid id: %v", err)
+	}
+
+	reminder, err := s.service.Update(userID, id, req.Title, req.Description, req.RemindAt)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -61,7 +90,22 @@ func (s *ReminderServer) UpdateReminder(ctx context.Context, req *pb.UpdateRemin
 }
 
 func (s *ReminderServer) DeleteReminder(ctx context.Context, req *pb.DeleteReminderRequest) (*pb.DeleteReminderResponse, error) {
-	err := s.service.Delete(req.UserId, req.Id)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return &pb.DeleteReminderResponse{
+			Success: false,
+			Message: "invalid user_id: " + err.Error(),
+		}, nil
+	}
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return &pb.DeleteReminderResponse{
+			Success: false,
+			Message: "invalid id: " + err.Error(),
+		}, nil
+	}
+
+	err = s.service.Delete(userID, id)
 	if err != nil {
 		return &pb.DeleteReminderResponse{
 			Success: false,
@@ -77,8 +121,8 @@ func (s *ReminderServer) DeleteReminder(ctx context.Context, req *pb.DeleteRemin
 
 func toProtoReminder(r *models.Reminder) *pb.ReminderResponse {
 	return &pb.ReminderResponse{
-		Id:          r.ID,
-		UserId:      r.UserID,
+		Id:          r.ID.String(),     // UUID to string
+		UserId:      r.UserID.String(), // UUID to string
 		Title:       r.Title,
 		Description: r.Description,
 		RemindAt:    r.RemindAt.Format("2006-01-02T15:04:05Z07:00"),

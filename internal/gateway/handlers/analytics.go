@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"fmt"
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/kiribu/jwt-practice/internal/gateway/client"
 	"github.com/labstack/echo/v4"
@@ -16,16 +17,16 @@ func NewAnalyticsHandler(analyticsClient *client.AnalyticsClient) *AnalyticsHand
 	return &AnalyticsHandler{analyticsClient: analyticsClient}
 }
 
-func (h *AnalyticsHandler) GetMyStats(c echo.Context) error {
-	userID, ok := c.Get("user_id").(int64)
-	if !ok {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not authenticated"})
-	}
+func (h *AnalyticsHandler) GetStats(c echo.Context) error {
+	userID := c.Get("user_id").(string)
 
-	stats, err := h.analyticsClient.GetUserStats(c.Request().Context(), userID)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	defer cancel()
+
+	resp, err := h.analyticsClient.GetUserStats(ctx, userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Failed to fetch stats: %v", err)})
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, stats)
+	return c.JSON(http.StatusOK, resp)
 }

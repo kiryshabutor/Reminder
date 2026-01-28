@@ -1,18 +1,22 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
-	ID           int       `db:"id" json:"id"`
+	ID           uuid.UUID `db:"id" json:"id"`
 	Username     string    `db:"username" json:"username"`
 	PasswordHash string    `db:"password_hash" json:"-"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }
 
 type RefreshToken struct {
-	ID        int       `db:"id" json:"id"`
+	ID        uuid.UUID `db:"id" json:"id"`
 	Token     string    `db:"token" json:"token"`
-	UserID    int       `db:"user_id" json:"user_id"`
+	UserID    uuid.UUID `db:"user_id" json:"user_id"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	ExpiresAt time.Time `db:"expires_at" json:"expires_at"`
 }

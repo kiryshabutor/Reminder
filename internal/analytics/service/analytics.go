@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/analytics/storage"
 	"github.com/kiribu/jwt-practice/models"
 )
@@ -18,7 +19,7 @@ func NewAnalyticsService(storage storage.AnalyticsStorage) *AnalyticsService {
 }
 
 func (s *AnalyticsService) ProcessEvent(ctx context.Context, event models.LifecycleEvent) error {
-	log.Printf("Processing event: %s for user %d", event.EventType, event.UserID)
+	log.Printf("Processing event: %s for user %s", event.EventType, event.UserID)
 
 	switch event.EventType {
 	case "created":
@@ -35,7 +36,7 @@ func (s *AnalyticsService) ProcessEvent(ctx context.Context, event models.Lifecy
 	}
 }
 
-func (s *AnalyticsService) GetUserStats(ctx context.Context, userID int64) (*models.UserStatistics, error) {
+func (s *AnalyticsService) GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error) {
 	stats, err := s.storage.GetUserStats(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {

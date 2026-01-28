@@ -1,10 +1,14 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Reminder struct {
-	ID          int64     `db:"id" json:"id"`
-	UserID      int64     `db:"user_id" json:"user_id"`
+	ID          uuid.UUID `db:"id" json:"id"`
+	UserID      uuid.UUID `db:"user_id" json:"user_id"`
 	Title       string    `db:"title" json:"title"`
 	Description string    `db:"description" json:"description"`
 	RemindAt    time.Time `db:"remind_at" json:"remind_at"`

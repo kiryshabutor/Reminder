@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/reminder/storage"
 	"github.com/kiribu/jwt-practice/models"
 )
@@ -18,7 +19,7 @@ func NewReminderService(storage storage.ReminderStorage) *ReminderService {
 	}
 }
 
-func (s *ReminderService) Create(userID int64, title, description, remindAtStr string) (*models.Reminder, error) {
+func (s *ReminderService) Create(userID uuid.UUID, title, description, remindAtStr string) (*models.Reminder, error) {
 	if title == "" {
 		return nil, errors.New("title is required")
 	}
@@ -40,15 +41,15 @@ func (s *ReminderService) Create(userID int64, title, description, remindAtStr s
 	return reminder, nil
 }
 
-func (s *ReminderService) GetByUserID(userID int64, status string) ([]models.Reminder, error) {
+func (s *ReminderService) GetByUserID(userID uuid.UUID, status string) ([]models.Reminder, error) {
 	return s.storage.GetByUserID(userID, status)
 }
 
-func (s *ReminderService) GetByID(userID, id int64) (*models.Reminder, error) {
+func (s *ReminderService) GetByID(userID, id uuid.UUID) (*models.Reminder, error) {
 	return s.storage.GetByID(userID, id)
 }
 
-func (s *ReminderService) Update(userID, id int64, title, description, remindAtStr string) (*models.Reminder, error) {
+func (s *ReminderService) Update(userID, id uuid.UUID, title, description, remindAtStr string) (*models.Reminder, error) {
 	if title == "" {
 		return nil, errors.New("title is required")
 	}
@@ -66,6 +67,6 @@ func (s *ReminderService) Update(userID, id int64, title, description, remindAtS
 	return reminder, nil
 }
 
-func (s *ReminderService) Delete(userID, id int64) error {
+func (s *ReminderService) Delete(userID, id uuid.UUID) error {
 	return s.storage.Delete(userID, id)
 }

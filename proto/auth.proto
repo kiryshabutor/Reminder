@@ -17,7 +17,7 @@ message RegisterRequest {
 }
 
 message RegisterResponse {
-  int64 id = 1;
+  string id = 1;  // UUID as string
   string username = 2;
   string created_at = 3;
 }
@@ -50,6 +50,6 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   bool valid = 1;
   string username = 2;
-  int64 user_id = 3;
+  string user_id = 3;  // UUID as string
   string error = 4;
 }

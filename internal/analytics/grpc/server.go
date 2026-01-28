@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/analytics/grpc/pb"
 	"github.com/kiribu/jwt-practice/internal/analytics/service"
 	"github.com/kiribu/jwt-practice/models"
@@ -19,7 +20,12 @@ func NewAnalyticsServer(service *service.AnalyticsService) *AnalyticsServer {
 }
 
 func (s *AnalyticsServer) GetUserStats(ctx context.Context, req *pb.GetUserStatsRequest) (*pb.UserStatsResponse, error) {
-	stats, err := s.service.GetUserStats(ctx, req.UserId)
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	stats, err := s.service.GetUserStats(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +34,7 @@ func (s *AnalyticsServer) GetUserStats(ctx context.Context, req *pb.GetUserStats
 
 func convertToProto(s *models.UserStatistics) *pb.UserStatsResponse {
 	resp := &pb.UserStatsResponse{
-		UserId:                  s.UserID,
+		UserId:                  s.UserID.String(),
 		TotalRemindersCreated:   s.TotalRemindersCreated,
 		TotalRemindersCompleted: s.TotalRemindersCompleted,
 		TotalRemindersDeleted:   s.TotalRemindersDeleted,

@@ -39,7 +39,7 @@ func (c *ReminderClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *ReminderClient) Create(ctx context.Context, userID int64, title, description, remindAt string) (*pb.ReminderResponse, error) {
+func (c *ReminderClient) Create(ctx context.Context, userID string, title, description, remindAt string) (*pb.ReminderResponse, error) {
 	return c.client.CreateReminder(ctx, &pb.CreateReminderRequest{
 		UserId:      userID,
 		Title:       title,
@@ -48,21 +48,21 @@ func (c *ReminderClient) Create(ctx context.Context, userID int64, title, descri
 	})
 }
 
-func (c *ReminderClient) GetAll(ctx context.Context, userID int64, status string) (*pb.GetRemindersResponse, error) {
+func (c *ReminderClient) GetAll(ctx context.Context, userID string, status string) (*pb.GetRemindersResponse, error) {
 	return c.client.GetReminders(ctx, &pb.GetRemindersRequest{
 		UserId: userID,
 		Status: status,
 	})
 }
 
-func (c *ReminderClient) GetByID(ctx context.Context, userID, id int64) (*pb.ReminderResponse, error) {
+func (c *ReminderClient) GetByID(ctx context.Context, userID, id string) (*pb.ReminderResponse, error) {
 	return c.client.GetReminder(ctx, &pb.GetReminderRequest{
 		UserId: userID,
 		Id:     id,
 	})
 }
 
-func (c *ReminderClient) Update(ctx context.Context, userID, id int64, title, description, remindAt string) (*pb.ReminderResponse, error) {
+func (c *ReminderClient) Update(ctx context.Context, userID, id string, title, description, remindAt string) (*pb.ReminderResponse, error) {
 	return c.client.UpdateReminder(ctx, &pb.UpdateReminderRequest{
 		UserId:      userID,
 		Id:          id,
@@ -72,7 +72,7 @@ func (c *ReminderClient) Update(ctx context.Context, userID, id int64, title, de
 	})
 }
 
-func (c *ReminderClient) Delete(ctx context.Context, userID, id int64) (*pb.DeleteReminderResponse, error) {
+func (c *ReminderClient) Delete(ctx context.Context, userID, id string) (*pb.DeleteReminderResponse, error) {
 	return c.client.DeleteReminder(ctx, &pb.DeleteReminderRequest{
 		UserId: userID,
 		Id:     id,
