@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.0
 // - protoc             v3.21.12
-// source: reminder.proto
+// source: proto/reminder.proto
 
 package pb
 
@@ -269,5 +269,5 @@ var ReminderService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "reminder.proto",
+	Metadata: "proto/reminder.proto",
 }
