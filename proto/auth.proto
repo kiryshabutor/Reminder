@@ -10,6 +10,7 @@ service AuthService {
   rpc Refresh(RefreshRequest) returns (RefreshResponse);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc GetProfile(GetProfileRequest) returns (UserResponse);
 }
 
 message RegisterRequest {
@@ -61,4 +62,14 @@ message LogoutRequest {
 
 message LogoutResponse {
   bool success = 1;
+}
+
+message GetProfileRequest {
+  string username = 1;
+}
+
+message UserResponse {
+  string id = 1;         // UUID as string
+  string username = 2;
+  string created_at = 3; // ISO string
 }

@@ -85,10 +85,15 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 func (h *AuthHandler) Profile(c echo.Context) error {
 	username := c.Get("username").(string)
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"username": username,
-		"message":  "This is a protected endpoint",
-	})
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	defer cancel()
+
+	userProfile, err := h.authClient.GetProfile(ctx, username)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch profile"})
+	}
+
+	return c.JSON(http.StatusOK, userProfile)
 }
 
 func (h *AuthHandler) Logout(c echo.Context) error {

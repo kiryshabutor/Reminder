@@ -67,3 +67,9 @@ func (c *AuthClient) Logout(ctx context.Context, token string) (*pb.LogoutRespon
 		Token: token,
 	})
 }
+
+func (c *AuthClient) GetProfile(ctx context.Context, username string) (*pb.UserResponse, error) {
+	return c.client.GetProfile(ctx, &pb.GetProfileRequest{
+		Username: username,
+	})
+}

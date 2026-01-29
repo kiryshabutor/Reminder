@@ -104,3 +104,20 @@ func (s *AuthServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.Log
 
 	return &pb.LogoutResponse{Success: true}, nil
 }
+
+func (s *AuthServer) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.UserResponse, error) {
+	if req.Username == "" {
+		return nil, status.Error(codes.InvalidArgument, "username is required")
+	}
+
+	user, err := s.service.GetProfile(ctx, req.Username)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.UserResponse{
+		Id:        user.ID.String(),
+		Username:  user.Username,
+		CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}

@@ -167,6 +167,42 @@ func (s *AuthService) ValidateToken(ctx context.Context, token string) (string, 
 	return claims.Username, user.ID, nil
 }
 
+func (s *AuthService) GetProfile(ctx context.Context, username string) (*UserResponse, error) {
+	// Check Cache
+	cacheKey := "user:" + username
+	val, err := s.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		// Cache Hit
+		slog.Debug("Cache hit for user profile", "username", username)
+		var user models.User
+		if err := json.Unmarshal([]byte(val), &user); err == nil {
+			return &UserResponse{
+				ID:        user.ID,
+				Username:  user.Username,
+				CreatedAt: user.CreatedAt,
+			}, nil
+		}
+	}
+
+	// Cache Miss
+	slog.Debug("Cache miss for user profile", "username", username)
+	user, err := s.store.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set Cache
+	if userJSON, err := json.Marshal(user); err == nil {
+		s.redis.Set(ctx, cacheKey, userJSON, utils.AccessTokenDuration)
+	}
+
+	return &UserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		CreatedAt: user.CreatedAt,
+	}, nil
+}
+
 func (s *AuthService) Logout(ctx context.Context, token string) error {
 	return s.redis.Set(ctx, "blacklist:"+token, "revoked", utils.AccessTokenDuration).Err()
 }

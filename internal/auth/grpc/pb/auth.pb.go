@@ -549,6 +549,110 @@ func (x *LogoutResponse) GetSuccess() bool {
 	return false
 }
 
+type GetProfileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfileRequest) Reset() {
+	*x = GetProfileRequest{}
+	mi := &file_proto_auth_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfileRequest) ProtoMessage() {}
+
+func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_auth_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfileRequest.ProtoReflect.Descriptor instead.
+func (*GetProfileRequest) Descriptor() ([]byte, []int) {
+	return file_proto_auth_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetProfileRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+type UserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // UUID as string
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"` // ISO string
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserResponse) Reset() {
+	*x = UserResponse{}
+	mi := &file_proto_auth_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserResponse) ProtoMessage() {}
+
+func (x *UserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_auth_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserResponse.ProtoReflect.Descriptor instead.
+func (*UserResponse) Descriptor() ([]byte, []int) {
+	return file_proto_auth_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UserResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UserResponse) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *UserResponse) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
 var File_proto_auth_proto protoreflect.FileDescriptor
 
 const file_proto_auth_proto_rawDesc = "" +
@@ -587,13 +691,22 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\rLogoutRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"*\n" +
 	"\x0eLogoutResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb1\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"/\n" +
+	"\x11GetProfileRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\"Y\n" +
+	"\fUserResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\tR\tcreatedAt2\xec\x02\n" +
 	"\vAuthService\x129\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x16.auth.RegisterResponse\x120\n" +
 	"\x05Login\x12\x12.auth.LoginRequest\x1a\x13.auth.LoginResponse\x126\n" +
 	"\aRefresh\x12\x14.auth.RefreshRequest\x1a\x15.auth.RefreshResponse\x12H\n" +
 	"\rValidateToken\x12\x1a.auth.ValidateTokenRequest\x1a\x1b.auth.ValidateTokenResponse\x123\n" +
-	"\x06Logout\x12\x13.auth.LogoutRequest\x1a\x14.auth.LogoutResponseB6Z4github.com/kiribu/jwt-practice/internal/auth/grpc/pbb\x06proto3"
+	"\x06Logout\x12\x13.auth.LogoutRequest\x1a\x14.auth.LogoutResponse\x129\n" +
+	"\n" +
+	"GetProfile\x12\x17.auth.GetProfileRequest\x1a\x12.auth.UserResponseB6Z4github.com/kiribu/jwt-practice/internal/auth/grpc/pbb\x06proto3"
 
 var (
 	file_proto_auth_proto_rawDescOnce sync.Once
@@ -607,7 +720,7 @@ func file_proto_auth_proto_rawDescGZIP() []byte {
 	return file_proto_auth_proto_rawDescData
 }
 
-var file_proto_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_proto_auth_proto_goTypes = []any{
 	(*RegisterRequest)(nil),       // 0: auth.RegisterRequest
 	(*RegisterResponse)(nil),      // 1: auth.RegisterResponse
@@ -619,23 +732,27 @@ var file_proto_auth_proto_goTypes = []any{
 	(*ValidateTokenResponse)(nil), // 7: auth.ValidateTokenResponse
 	(*LogoutRequest)(nil),         // 8: auth.LogoutRequest
 	(*LogoutResponse)(nil),        // 9: auth.LogoutResponse
+	(*GetProfileRequest)(nil),     // 10: auth.GetProfileRequest
+	(*UserResponse)(nil),          // 11: auth.UserResponse
 }
 var file_proto_auth_proto_depIdxs = []int32{
-	0, // 0: auth.AuthService.Register:input_type -> auth.RegisterRequest
-	2, // 1: auth.AuthService.Login:input_type -> auth.LoginRequest
-	4, // 2: auth.AuthService.Refresh:input_type -> auth.RefreshRequest
-	6, // 3: auth.AuthService.ValidateToken:input_type -> auth.ValidateTokenRequest
-	8, // 4: auth.AuthService.Logout:input_type -> auth.LogoutRequest
-	1, // 5: auth.AuthService.Register:output_type -> auth.RegisterResponse
-	3, // 6: auth.AuthService.Login:output_type -> auth.LoginResponse
-	5, // 7: auth.AuthService.Refresh:output_type -> auth.RefreshResponse
-	7, // 8: auth.AuthService.ValidateToken:output_type -> auth.ValidateTokenResponse
-	9, // 9: auth.AuthService.Logout:output_type -> auth.LogoutResponse
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: auth.AuthService.Register:input_type -> auth.RegisterRequest
+	2,  // 1: auth.AuthService.Login:input_type -> auth.LoginRequest
+	4,  // 2: auth.AuthService.Refresh:input_type -> auth.RefreshRequest
+	6,  // 3: auth.AuthService.ValidateToken:input_type -> auth.ValidateTokenRequest
+	8,  // 4: auth.AuthService.Logout:input_type -> auth.LogoutRequest
+	10, // 5: auth.AuthService.GetProfile:input_type -> auth.GetProfileRequest
+	1,  // 6: auth.AuthService.Register:output_type -> auth.RegisterResponse
+	3,  // 7: auth.AuthService.Login:output_type -> auth.LoginResponse
+	5,  // 8: auth.AuthService.Refresh:output_type -> auth.RefreshResponse
+	7,  // 9: auth.AuthService.ValidateToken:output_type -> auth.ValidateTokenResponse
+	9,  // 10: auth.AuthService.Logout:output_type -> auth.LogoutResponse
+	11, // 11: auth.AuthService.GetProfile:output_type -> auth.UserResponse
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_proto_auth_proto_init() }
@@ -649,7 +766,7 @@ func file_proto_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_auth_proto_rawDesc), len(file_proto_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
