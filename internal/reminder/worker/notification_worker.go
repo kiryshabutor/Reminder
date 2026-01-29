@@ -2,7 +2,7 @@ package worker
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/reminder/storage"
@@ -24,12 +24,12 @@ func (w *NotificationWorker) Start(ctx context.Context) {
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 
-	log.Printf("Reminder worker started with interval %v", w.interval)
+	slog.Info("Reminder worker started", "interval", w.interval)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Stopping reminder worker...")
+			slog.Info("Stopping reminder worker...")
 			return
 		case <-ticker.C:
 			w.processPending()
@@ -40,19 +40,19 @@ func (w *NotificationWorker) Start(ctx context.Context) {
 func (w *NotificationWorker) processPending() {
 	reminders, err := w.storage.GetPending()
 	if err != nil {
-		log.Printf("Error fetching pending reminders: %v", err)
+		slog.Error("Error fetching pending reminders", "error", err)
 		return
 	}
 
 	if len(reminders) > 0 {
-		log.Printf("Found %d pending reminders, creating outbox events", len(reminders))
+		slog.Info("Found pending reminders, creating outbox events", "count", len(reminders))
 	}
 
 	for _, reminder := range reminders {
 		if err := w.storage.CreateNotificationEventsAndMarkSent(reminder); err != nil {
-			log.Printf("Error creating notification events for reminder %d: %v", reminder.ID, err)
+			slog.Error("Error creating notification events", "reminder_id", reminder.ID, "error", err)
 		} else {
-			log.Printf("Successfully created notification events for reminder %d", reminder.ID)
+			slog.Debug("Successfully created notification events", "reminder_id", reminder.ID)
 		}
 	}
 }

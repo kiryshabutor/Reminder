@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,43 +11,49 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kiribu/jwt-practice/internal/gateway/client"
 	"github.com/kiribu/jwt-practice/internal/gateway/handlers"
+	customMiddleware "github.com/kiribu/jwt-practice/internal/gateway/middleware"
+	"github.com/kiribu/jwt-practice/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env file not found, using system environment variables")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {
+	env := getEnv("APP_ENV", "local")
+	logger.Setup(env)
+
 	// Connect to Auth Service
 	authServiceAddr := getEnv("AUTH_SERVICE_ADDR", "auth-service:50051")
 	authClient, err := client.NewAuthClient(authServiceAddr)
 	if err != nil {
-		log.Fatalf("Failed to connect to Auth Service: %v", err)
+		slog.Error("Failed to connect to Auth Service", "error", err)
+		os.Exit(1)
 	}
 	defer authClient.Close()
-	log.Printf("API Gateway: Connected to Auth Service (%s)\n", authServiceAddr)
+	slog.Info("API Gateway: Connected to Auth Service", "addr", authServiceAddr)
 
 	// Connect to Reminder Service
 	reminderServiceAddr := getEnv("REMINDER_SERVICE_ADDR", "reminder-service:50052")
 	reminderClient, err := client.NewReminderClient(reminderServiceAddr)
 	if err != nil {
-		log.Fatalf("Failed to connect to Reminder Service: %v", err)
+		slog.Error("Failed to connect to Reminder Service", "error", err)
+		os.Exit(1)
 	}
 	defer reminderClient.Close()
-	log.Printf("API Gateway: Connected to Reminder Service (%s)\n", reminderServiceAddr)
+	slog.Info("API Gateway: Connected to Reminder Service", "addr", reminderServiceAddr)
 
 	// Connect to Analytics Service
 	analyticsServiceAddr := getEnv("ANALYTICS_SERVICE_ADDR", "analytics-service:50053")
 	analyticsClient, err := client.NewAnalyticsClient(analyticsServiceAddr)
 	if err != nil {
-		log.Fatalf("Failed to connect to Analytics Service: %v", err)
+		slog.Error("Failed to connect to Analytics Service", "error", err)
+		os.Exit(1)
 	}
 	defer analyticsClient.Close()
-	log.Printf("API Gateway: Connected to Analytics Service (%s)\n", analyticsServiceAddr)
+	slog.Info("API Gateway: Connected to Analytics Service", "addr", analyticsServiceAddr)
 
 	authHandler := handlers.NewAuthHandler(authClient)
 	reminderHandler := handlers.NewReminderHandler(reminderClient)
@@ -56,7 +62,7 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 
-	e.Use(middleware.Logger())
+	e.Use(customMiddleware.SlogLogger)
 	e.Use(middleware.Recover())
 
 	e.POST("/register", authHandler.Register)
@@ -82,24 +88,25 @@ func main() {
 
 	port := getEnv("HTTP_PORT", "8080")
 
-	log.Printf("API Gateway (HTTP) started on http://localhost:%s\n", port)
-	log.Println("Available endpoints:")
-	log.Println("   POST   /register        - Registration")
-	log.Println("   POST   /login           - Login")
-	log.Println("   POST   /refresh         - Token refresh")
-	log.Println("   POST   /auth/logout     - Logout (protected)")
-	log.Println("   GET    /profile         - Profile (protected)")
-	log.Println("   POST   /reminders       - Create reminder (protected)")
-	log.Println("   GET    /reminders       - List reminders (protected)")
-	log.Println("   GET    /reminders/:id   - Get reminder (protected)")
-	log.Println("   PUT    /reminders/:id   - Update reminder (protected)")
-	log.Println("   DELETE /reminders/:id   - Delete reminder (protected)")
-	log.Println("   GET    /analytics/me    - Get user stats (protected)")
-	log.Println("   GET    /health          - Health check")
+	slog.Info("API Gateway (HTTP) started", "port", port)
+	slog.Info("Available endpoints:", "endpoints", []string{
+		"POST   /register",
+		"POST   /login",
+		"POST   /refresh",
+		"POST   /auth/logout",
+		"GET    /profile",
+		"POST   /reminders",
+		"GET    /reminders",
+		"GET    /reminders/:id",
+		"PUT    /reminders/:id",
+		"DELETE /reminders/:id",
+		"GET    /analytics/me",
+		"GET    /health",
+	})
 
 	go func() {
 		if err := e.Start(":" + port); err != nil {
-			log.Printf("HTTP server stopped: %v", err)
+			slog.Info("HTTP server stopped", "error", err)
 		}
 	}()
 
@@ -107,7 +114,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down API Gateway...")
+	slog.Info("Shutting down API Gateway...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	e.Shutdown(ctx)

@@ -100,6 +100,7 @@ services:
     ports:
       - "${GRPC_PORT}:${GRPC_PORT}"
     environment:
+      APP_ENV: ${APP_ENV:-local}
       DB_HOST: database
       DB_PORT: 5432
       DB_USER: ${DB_USER}
@@ -127,6 +128,7 @@ services:
     ports:
       - "${REMINDER_GRPC_PORT}:${REMINDER_GRPC_PORT}"
     environment:
+      APP_ENV: ${APP_ENV:-local}
       DB_HOST: database
       DB_PORT: 5432
       DB_USER: ${DB_USER}
@@ -155,6 +157,7 @@ services:
     ports:
       - "${ANALYTICS_GRPC_PORT:-50053}:${ANALYTICS_GRPC_PORT:-50053}"
     environment:
+      APP_ENV: ${APP_ENV:-local}
       DB_HOST: database
       DB_PORT: 5432
       DB_USER: ${DB_USER}
@@ -181,6 +184,7 @@ services:
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
     environment:
+      APP_ENV: ${APP_ENV:-local}
       AUTH_SERVICE_ADDR: auth-service:${GRPC_PORT}
       REMINDER_SERVICE_ADDR: reminder-service:${REMINDER_GRPC_PORT}
       ANALYTICS_SERVICE_ADDR: analytics-service:${ANALYTICS_GRPC_PORT:-50053}
@@ -199,6 +203,7 @@ services:
     container_name: notification-service
     restart: unless-stopped
     environment:
+      APP_ENV: ${APP_ENV:-local}
       KAFKA_BROKERS: kafka:9092
       KAFKA_TOPIC: ${KAFKA_TOPIC_NOTIFICATIONS}
       KAFKA_GROUP_ID: ${KAFKA_GROUP_NOTIFICATIONS}

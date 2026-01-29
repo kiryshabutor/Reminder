@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/analytics/grpc/pb"
@@ -19,7 +19,7 @@ func NewAnalyticsClient(addr string) (*AnalyticsClient, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	log.Printf("Connecting to Analytics Service at %s...", addr)
+	slog.Info("Connecting to Analytics Service", "addr", addr)
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
@@ -27,7 +27,7 @@ func NewAnalyticsClient(addr string) (*AnalyticsClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Connected to Analytics Service at %s", addr)
+	slog.Info("Connected to Analytics Service", "addr", addr)
 
 	return &AnalyticsClient{conn: conn,
 		client: pb.NewAnalyticsServiceClient(conn),

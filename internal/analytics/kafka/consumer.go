@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/analytics/service"
@@ -32,19 +32,19 @@ func NewConsumer(brokers []string, topic string, service *service.AnalyticsServi
 }
 
 func (c *Consumer) Start() {
-	log.Println("Kafka Consumer started...")
+	slog.Info("Kafka Consumer started...")
 
 	for {
 		m, err := c.reader.ReadMessage(context.Background())
 		if err != nil {
-			log.Printf("Error reading message: %v", err)
+			slog.Error("Error reading message", "error", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		var event models.LifecycleEvent
 		if err := json.Unmarshal(m.Value, &event); err != nil {
-			log.Printf("Error unmarshalling event: %v", err)
+			slog.Error("Error unmarshalling event", "error", err)
 			continue
 		}
 
@@ -53,7 +53,7 @@ func (c *Consumer) Start() {
 		cancel()
 
 		if err != nil {
-			log.Printf("Error processing event: %v", err)
+			slog.Error("Error processing event", "error", err)
 		}
 	}
 }

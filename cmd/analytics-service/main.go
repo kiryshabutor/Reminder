@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -15,25 +15,28 @@ import (
 	"github.com/kiribu/jwt-practice/internal/analytics/kafka"
 	"github.com/kiribu/jwt-practice/internal/analytics/service"
 	"github.com/kiribu/jwt-practice/internal/analytics/storage"
+	"github.com/kiribu/jwt-practice/pkg/logger"
 	"google.golang.org/grpc"
 )
 
 func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env file not found, using system environment variables")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {
+	env := getEnv("APP_ENV", "local")
+	logger.Setup(env)
+
 	dbConfig := config.LoadDatabaseConfig()
 
 	db, err := config.ConnectDatabase(dbConfig)
 	if err != nil {
-		log.Fatalf("DB connection error: %v", err)
+		slog.Error("DB connection error", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
-	log.Println("Analytics Service: Successfully connected to PostgreSQL")
+	slog.Info("Analytics Service: Successfully connected to PostgreSQL")
 
 	store := storage.NewPostgresStorage(db)
 	analyticsService := service.NewAnalyticsService(store)
@@ -50,17 +53,19 @@ func main() {
 	grpcPort := getEnv("ANALYTICS_GRPC_PORT", "50053")
 	listener, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
-		log.Fatalf("Failed to start listener: %v", err)
+		slog.Error("Failed to start listener", "error", err)
+		os.Exit(1)
 	}
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterAnalyticsServiceServer(grpcServer, analyticsServer)
 
-	log.Printf("Analytics Service (gRPC) started on port %s\n", grpcPort)
+	slog.Info("Analytics Service (gRPC) started", "port", grpcPort)
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("gRPC server error: %v", err)
+			slog.Error("gRPC server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -68,7 +73,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down Analytics Service...")
+	slog.Info("Shutting down Analytics Service...")
 	grpcServer.GracefulStop()
 }
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -13,35 +13,39 @@ import (
 	"github.com/kiribu/jwt-practice/internal/auth/grpc/pb"
 	"github.com/kiribu/jwt-practice/internal/auth/service"
 	"github.com/kiribu/jwt-practice/internal/auth/storage"
+	"github.com/kiribu/jwt-practice/pkg/logger"
 	"github.com/kiribu/jwt-practice/pkg/redis"
 	"google.golang.org/grpc"
 )
 
 func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env file not found, using system environment variables")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {
+	env := getEnv("APP_ENV", "local")
+	logger.Setup(env)
+
 	dbConfig := config.LoadDatabaseConfig()
 
 	db, err := config.ConnectDatabase(dbConfig)
 	if err != nil {
-		log.Fatalf("DB connection error: %v", err)
+		slog.Error("DB connection error", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
-	log.Println("Auth Service: Successfully connected to PostgreSQL")
+	slog.Info("Auth Service: Successfully connected to PostgreSQL")
 
 	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 	redisPassword := getEnv("REDIS_PASSWORD", "")
 	redisClient, err := redis.NewRedisClient(redisAddr, redisPassword)
 	if err != nil {
-		log.Fatalf("Redis connection error: %v", err)
+		slog.Error("Redis connection error", "error", err)
+		os.Exit(1)
 	}
 	defer redisClient.Close()
-	log.Println("Auth Service: Successfully connected to Redis")
+	slog.Info("Auth Service: Successfully connected to Redis")
 
 	store := storage.NewPostgresStorage(db)
 	authService := service.NewAuthService(store, redisClient)
@@ -52,14 +56,16 @@ func main() {
 	port := getEnv("GRPC_PORT", "50051")
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("Failed to start listener: %v", err)
+		slog.Error("Failed to start listener", "error", err)
+		os.Exit(1)
 	}
 
-	log.Printf("Auth Service (gRPC) started on port %s\n", port)
+	slog.Info("Auth Service (gRPC) started", "port", port)
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("gRPC server error: %v", err)
+			slog.Error("gRPC server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -67,7 +73,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down Auth Service...")
+	slog.Info("Shutting down Auth Service...")
 	grpcServer.GracefulStop()
 }
 
