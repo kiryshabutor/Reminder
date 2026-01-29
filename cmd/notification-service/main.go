@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -10,19 +10,23 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kiribu/jwt-practice/internal/notification/kafka"
+	"github.com/kiribu/jwt-practice/pkg/logger"
 )
 
 func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env file not found, using system environment variables")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {
-	log.Println("Starting Notification Service...")
+	env := getEnv("APP_ENV", "local")
+	logger.Setup(env)
+
+	slog.Info("Starting Notification Service...")
 
 	brokersEnv := getEnv("KAFKA_BROKERS", "kafka:9092")
 	brokers := strings.Split(brokersEnv, ",")
+
+	// Consumer for Notifications (for NotificationWorker)
 	topic := getEnv("KAFKA_TOPIC_NOTIFICATIONS", "notifications")
 	groupID := getEnv("KAFKA_GROUP_ID", "notification-workers")
 
@@ -33,12 +37,12 @@ func main() {
 
 	go consumer.Start(ctx)
 
-	log.Printf("Notification Service started. Listening on topic: %s", topic)
+	slog.Info("Notification Service started", "topic", topic)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down Notification Service...")
+	slog.Info("Shutting down Notification Service...")
 	cancel()
 }
 

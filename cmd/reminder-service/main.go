@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -18,25 +18,28 @@ import (
 	"github.com/kiribu/jwt-practice/internal/reminder/service"
 	"github.com/kiribu/jwt-practice/internal/reminder/storage"
 	"github.com/kiribu/jwt-practice/internal/reminder/worker"
+	"github.com/kiribu/jwt-practice/pkg/logger"
 	"google.golang.org/grpc"
 )
 
 func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env file not found, using system environment variables")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func main() {
+	env := getEnv("APP_ENV", "local")
+	logger.Setup(env)
+
 	dbConfig := config.LoadDatabaseConfig()
 
 	db, err := config.ConnectDatabase(dbConfig)
 	if err != nil {
-		log.Fatalf("DB connection error: %v", err)
+		slog.Error("DB connection error", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
-	log.Println("Reminder Service: Successfully connected to PostgreSQL")
+	slog.Info("Reminder Service: Successfully connected to PostgreSQL")
 
 	store := storage.NewPostgresStorage(db)
 
@@ -48,7 +51,7 @@ func main() {
 	notificationProducer := kafka.NewProducer(brokers, notificationTopic)
 	defer func() {
 		if err := notificationProducer.Close(); err != nil {
-			log.Printf("Failed to close notification producer: %v", err)
+			slog.Error("Failed to close notification producer", "error", err)
 		}
 	}()
 
@@ -57,7 +60,7 @@ func main() {
 	lifecycleProducer := kafka.NewProducer(brokers, lifecycleTopic)
 	defer func() {
 		if err := lifecycleProducer.Close(); err != nil {
-			log.Printf("Failed to close lifecycle producer: %v", err)
+			slog.Error("Failed to close lifecycle producer", "error", err)
 		}
 	}()
 
@@ -70,15 +73,17 @@ func main() {
 	port := getEnv("REMINDER_GRPC_PORT", "50052")
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("Failed to start listener: %v", err)
+		slog.Error("Failed to start listener", "error", err)
+		os.Exit(1)
 	}
 
-	log.Printf("Reminder Service (gRPC) started on port %s\n", port)
+	slog.Info("Reminder Service (gRPC) started", "port", port)
 
 	intervalStr := getEnv("WORKER_INTERVAL", "5s")
 	interval, err := time.ParseDuration(intervalStr)
 	if err != nil {
-		log.Fatalf("Invalid WORKER_INTERVAL: %v", err)
+		slog.Error("Invalid WORKER_INTERVAL", "error", err)
+		os.Exit(1)
 	}
 
 	notificationWorker := worker.NewNotificationWorker(store, interval)
@@ -92,7 +97,8 @@ func main() {
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("gRPC server error: %v", err)
+			slog.Error("gRPC server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -100,7 +106,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down Reminder Service...")
+	slog.Info("Shutting down Reminder Service...")
 
 	cancel()
 

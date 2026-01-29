@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/kiribu/jwt-practice/internal/analytics/storage"
@@ -19,7 +19,7 @@ func NewAnalyticsService(storage storage.AnalyticsStorage) *AnalyticsService {
 }
 
 func (s *AnalyticsService) ProcessEvent(ctx context.Context, event models.LifecycleEvent) error {
-	log.Printf("Processing event: %s for user %s", event.EventType, event.UserID)
+	slog.Info("Processing event", "type", event.EventType, "user_id", event.UserID)
 
 	switch event.EventType {
 	case "created":
@@ -31,7 +31,7 @@ func (s *AnalyticsService) ProcessEvent(ctx context.Context, event models.Lifecy
 	case "deleted":
 		return s.storage.IncrementDeleted(ctx, event.UserID, event.Timestamp)
 	default:
-		log.Printf("Unknown event type: %s", event.EventType)
+		slog.Warn("Unknown event type", "type", event.EventType)
 		return nil
 	}
 }

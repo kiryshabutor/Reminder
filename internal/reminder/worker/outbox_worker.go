@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/reminder/kafka"
@@ -39,12 +39,12 @@ func (w *OutboxWorker) Start(ctx context.Context) {
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 
-	log.Printf("Outbox Worker started with interval %v", w.interval)
+	slog.Info("Outbox Worker started", "interval", w.interval)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Stopping Outbox Worker...")
+			slog.Info("Stopping Outbox Worker...")
 			return
 		case <-ticker.C:
 			w.processOutbox()
@@ -55,26 +55,26 @@ func (w *OutboxWorker) Start(ctx context.Context) {
 func (w *OutboxWorker) processOutbox() {
 	events, err := w.storage.GetPendingOutboxEvents(w.batchSize)
 	if err != nil {
-		log.Printf("Error fetching outbox events: %v", err)
+		slog.Error("Error fetching outbox events", "error", err)
 		return
 	}
 
 	if len(events) > 0 {
-		log.Printf("Processing %d outbox events", len(events))
+		slog.Info("Processing outbox events", "count", len(events))
 	}
 
 	for _, event := range events {
 		if err := w.processEvent(event); err != nil {
-			log.Printf("Error processing outbox event %d: %v", event.ID, err)
+			slog.Error("Error processing outbox event", "event_id", event.ID, "error", err)
 
 			if err := w.storage.IncrementOutboxRetryCount(event.ID, err.Error()); err != nil {
-				log.Printf("Failed to update retry count for event %d: %v", event.ID, err)
+				slog.Error("Failed to update retry count", "event_id", event.ID, "error", err)
 			}
 			continue
 		}
 
 		if err := w.storage.MarkOutboxEventAsSent(event.ID); err != nil {
-			log.Printf("Failed to mark event %d as sent: %v", event.ID, err)
+			slog.Error("Failed to mark event as sent", "event_id", event.ID, "error", err)
 		}
 	}
 }
@@ -93,8 +93,7 @@ func (w *OutboxWorker) processEvent(event storage.OutboxEvent) error {
 			return fmt.Errorf("failed to send to lifecycle topic: %w", err)
 		}
 
-		log.Printf("Sent %s event to reminder_lifecycle (event_id=%d, reminder_id=%d)",
-			event.EventType, event.ID, event.AggregateID)
+		slog.Debug("Sent event to reminder_lifecycle", "type", event.EventType, "event_id", event.ID, "reminder_id", event.AggregateID)
 
 	case "notification_trigger":
 		var reminder models.Reminder
@@ -106,8 +105,7 @@ func (w *OutboxWorker) processEvent(event storage.OutboxEvent) error {
 			return fmt.Errorf("failed to send to notifications topic: %w", err)
 		}
 
-		log.Printf("Sent notification_trigger event to notifications (event_id=%d, reminder_id=%d)",
-			event.ID, event.AggregateID)
+		slog.Debug("Sent notification_trigger event", "event_id", event.ID, "reminder_id", event.AggregateID)
 
 	default:
 		return fmt.Errorf("unknown event type: %s", event.EventType)

@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	"github.com/kiribu/jwt-practice/models"
 	"github.com/segmentio/kafka-go"
@@ -27,13 +27,13 @@ func NewConsumer(brokers []string, topic, groupID string) *Consumer {
 }
 
 func (c *Consumer) Start(ctx context.Context) {
-	log.Printf("Starting Kafka consumer for topic: %s", c.reader.Config().Topic)
+	slog.Info("Starting Kafka consumer", "topic", c.reader.Config().Topic)
 	defer c.reader.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Stopping Kafka consumer...")
+			slog.Info("Stopping Kafka consumer...")
 			return
 		default:
 			c.processMessage(ctx)
@@ -47,7 +47,7 @@ func (c *Consumer) processMessage(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		log.Printf("Error reading message: %v", err)
+		slog.Error("Error reading message", "error", err)
 		return
 	}
 
@@ -57,10 +57,12 @@ func (c *Consumer) processMessage(ctx context.Context) {
 func (c *Consumer) handlePayload(data []byte) {
 	var reminder models.Reminder
 	if err := json.Unmarshal(data, &reminder); err != nil {
-		log.Printf("Failed to unmarshal reminder: %v | Data: %s", err, string(data))
+		slog.Error("Failed to unmarshal reminder", "error", err, "data", string(data))
 		return
 	}
 
-	log.Printf("[NOTIFICATION] Sending reminder to UserID %d: %s (Desc: %s)",
-		reminder.UserID, reminder.Title, reminder.Description)
+	slog.Info("[NOTIFICATION] Sending reminder",
+		"user_id", reminder.UserID,
+		"title", reminder.Title,
+		"desc", reminder.Description)
 }

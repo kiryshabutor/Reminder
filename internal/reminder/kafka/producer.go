@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/models"
@@ -54,6 +54,6 @@ func (p *Producer) SendEvent(key string, payload interface{}) error {
 		return fmt.Errorf("failed to write message to kafka: %w", err)
 	}
 
-	log.Printf("Sent message to Kafka topic %s (key=%s)", p.writer.Topic, key)
+	slog.Debug("Sent message to Kafka", "topic", p.writer.Topic, "key", key)
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"regexp"
 	"time"
 
@@ -131,7 +131,7 @@ func (s *AuthService) ValidateToken(ctx context.Context, token string) (string, 
 	// Check Blacklist
 	val, err := s.redis.Get(ctx, "blacklist:"+token).Result()
 	if err == nil && val == "revoked" {
-		log.Printf("Blacklist hit for token %s", token)
+		slog.Warn("Blacklist hit for token", "token", token)
 		return "", uuid.Nil, errors.New("token revoked")
 	}
 
@@ -145,7 +145,7 @@ func (s *AuthService) ValidateToken(ctx context.Context, token string) (string, 
 	val, err = s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
 		// Cache Hit
-		log.Printf("Cache hit for user %s", claims.Username)
+		slog.Debug("Cache hit for user", "username", claims.Username)
 		var user models.User
 		if err := json.Unmarshal([]byte(val), &user); err == nil {
 			return user.Username, user.ID, nil
@@ -153,7 +153,7 @@ func (s *AuthService) ValidateToken(ctx context.Context, token string) (string, 
 	}
 
 	// Cache Miss
-	log.Printf("Cache miss for user %s", claims.Username)
+	slog.Debug("Cache miss for user", "username", claims.Username)
 	user, err := s.store.GetUserByUsername(claims.Username)
 	if err != nil {
 		return "", uuid.Nil, err

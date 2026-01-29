@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/kiribu/jwt-practice/internal/reminder/grpc/pb"
@@ -19,7 +19,7 @@ func NewReminderClient(addr string) (*ReminderClient, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	log.Printf("Connecting to Reminder Service at %s...", addr)
+	slog.Info("Connecting to Reminder Service", "addr", addr)
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
@@ -27,7 +27,7 @@ func NewReminderClient(addr string) (*ReminderClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Connected to Reminder Service at %s", addr)
+	slog.Info("Connected to Reminder Service", "addr", addr)
 
 	return &ReminderClient{
 		conn:   conn,
