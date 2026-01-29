@@ -65,14 +65,14 @@ func main() {
 	e.Use(customMiddleware.SlogLogger)
 	e.Use(middleware.Recover())
 
-	e.POST("/register", authHandler.Register)
-	e.POST("/login", authHandler.Login)
-	e.POST("/refresh", authHandler.Refresh)
+	e.POST("/auth/register", authHandler.Register)
+	e.POST("/auth/login", authHandler.Login)
+	e.POST("/auth/refresh", authHandler.Refresh)
 
 	protected := e.Group("")
 	protected.Use(authHandler.AuthMiddleware)
 	protected.POST("/auth/logout", authHandler.Logout)
-	protected.GET("/profile", authHandler.Profile)
+	protected.GET("/auth/profile", authHandler.Profile)
 
 	protected.POST("/reminders", reminderHandler.Create)
 	protected.GET("/reminders", reminderHandler.List)
