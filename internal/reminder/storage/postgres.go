@@ -78,6 +78,7 @@ func (s *PostgresStorage) Create(userID uuid.UUID, title, description string, re
 	}
 
 	event := models.LifecycleEvent{
+		EventID:    uuid.Must(uuid.NewV7()),
 		EventType:  "created",
 		ReminderID: reminder.ID,
 		UserID:     reminder.UserID,
@@ -157,6 +158,7 @@ func (s *PostgresStorage) Update(userID, id uuid.UUID, title, description string
 	}
 
 	event := models.LifecycleEvent{
+		EventID:    uuid.Must(uuid.NewV7()),
 		EventType:  "updated",
 		ReminderID: reminder.ID,
 		UserID:     reminder.UserID,
@@ -195,6 +197,7 @@ func (s *PostgresStorage) Delete(userID, id uuid.UUID) error {
 	}
 
 	event := models.LifecycleEvent{
+		EventID:    uuid.Must(uuid.NewV7()),
 		EventType:  "deleted",
 		ReminderID: id,
 		UserID:     userID,
@@ -295,6 +298,7 @@ func (s *PostgresStorage) CreateNotificationEventsAndMarkSent(reminder models.Re
 
 	// notification_sent: LifecycleEvent for analytics-service
 	lifecycleEvent := models.LifecycleEvent{
+		EventID:    uuid.Must(uuid.NewV7()),
 		EventType:  "notification_sent",
 		ReminderID: reminder.ID,
 		UserID:     reminder.UserID,

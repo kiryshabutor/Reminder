@@ -19,21 +19,46 @@ func NewAnalyticsService(storage storage.AnalyticsStorage) *AnalyticsService {
 }
 
 func (s *AnalyticsService) ProcessEvent(ctx context.Context, event models.LifecycleEvent) error {
-	slog.Info("Processing event", "type", event.EventType, "user_id", event.UserID)
+	slog.Info("Processing event", "event_id", event.EventID, "type", event.EventType, "user_id", event.UserID)
+
+	tx, err := s.storage.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	processed, err := s.storage.IsEventProcessed(ctx, tx, event.EventID)
+	if err != nil {
+		return err
+	}
+	if processed {
+		slog.Info("Event already processed, skipping", "event_id", event.EventID)
+		return nil
+	}
 
 	switch event.EventType {
 	case "created":
-		return s.storage.IncrementCreated(ctx, event.UserID, event.Timestamp)
+		err = s.storage.IncrementCreated(ctx, tx, event.UserID, event.Timestamp)
 	case "updated":
-		return nil
+		err = nil // No-op for updated
 	case "notification_sent":
-		return s.storage.IncrementCompleted(ctx, event.UserID, event.Timestamp)
+		err = s.storage.IncrementCompleted(ctx, tx, event.UserID, event.Timestamp)
 	case "deleted":
-		return s.storage.IncrementDeleted(ctx, event.UserID, event.Timestamp)
+		err = s.storage.IncrementDeleted(ctx, tx, event.UserID, event.Timestamp)
 	default:
 		slog.Warn("Unknown event type", "type", event.EventType)
-		return nil
+		err = nil
 	}
+
+	if err != nil {
+		return err
+	}
+
+	if err := s.storage.MarkEventProcessed(ctx, tx, event.EventID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *AnalyticsService) GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error) {

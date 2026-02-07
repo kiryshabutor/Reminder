@@ -11,9 +11,13 @@ import (
 
 type AnalyticsStorage interface {
 	GetUserStats(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error)
-	IncrementCreated(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
-	IncrementCompleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
-	IncrementDeleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error
+
+	BeginTx(ctx context.Context) (*sqlx.Tx, error)
+	IsEventProcessed(ctx context.Context, tx *sqlx.Tx, eventID uuid.UUID) (bool, error)
+	MarkEventProcessed(ctx context.Context, tx *sqlx.Tx, eventID uuid.UUID) error
+	IncrementCreated(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error
+	IncrementCompleted(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error
+	IncrementDeleted(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error
 }
 
 type PostgresStorage struct {
@@ -34,7 +38,24 @@ func (s *PostgresStorage) GetUserStats(ctx context.Context, userID uuid.UUID) (*
 	return &stats, nil
 }
 
-func (s *PostgresStorage) IncrementCreated(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
+func (s *PostgresStorage) BeginTx(ctx context.Context) (*sqlx.Tx, error) {
+	return s.db.BeginTxx(ctx, nil)
+}
+
+func (s *PostgresStorage) IsEventProcessed(ctx context.Context, tx *sqlx.Tx, eventID uuid.UUID) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM analytics.processed_events WHERE event_id = $1)`
+	err := tx.GetContext(ctx, &exists, query, eventID)
+	return exists, err
+}
+
+func (s *PostgresStorage) MarkEventProcessed(ctx context.Context, tx *sqlx.Tx, eventID uuid.UUID) error {
+	query := `INSERT INTO analytics.processed_events (event_id) VALUES ($1)`
+	_, err := tx.ExecContext(ctx, query, eventID)
+	return err
+}
+
+func (s *PostgresStorage) IncrementCreated(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		INSERT INTO analytics.user_statistics (user_id, total_reminders_created, active_reminders, first_reminder_at, last_activity_at)
 		VALUES ($1, 1, 1, $2, $2)
@@ -49,11 +70,11 @@ func (s *PostgresStorage) IncrementCreated(ctx context.Context, userID uuid.UUID
 			END,
 			updated_at = NOW()
 	`
-	_, err := s.db.ExecContext(ctx, query, userID, timestamp)
+	_, err := tx.ExecContext(ctx, query, userID, timestamp)
 	return err
 }
 
-func (s *PostgresStorage) IncrementCompleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
+func (s *PostgresStorage) IncrementCompleted(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		UPDATE analytics.user_statistics SET
 			total_reminders_completed = total_reminders_completed + 1,
@@ -67,11 +88,11 @@ func (s *PostgresStorage) IncrementCompleted(ctx context.Context, userID uuid.UU
 			updated_at = NOW()
 		WHERE user_id = $1
 	`
-	_, err := s.db.ExecContext(ctx, query, userID, timestamp)
+	_, err := tx.ExecContext(ctx, query, userID, timestamp)
 	return err
 }
 
-func (s *PostgresStorage) IncrementDeleted(ctx context.Context, userID uuid.UUID, timestamp time.Time) error {
+func (s *PostgresStorage) IncrementDeleted(ctx context.Context, tx *sqlx.Tx, userID uuid.UUID, timestamp time.Time) error {
 	query := `
 		UPDATE analytics.user_statistics SET
 			total_reminders_deleted = total_reminders_deleted + 1,
@@ -80,6 +101,6 @@ func (s *PostgresStorage) IncrementDeleted(ctx context.Context, userID uuid.UUID
 			updated_at = NOW()
 		WHERE user_id = $1
 	`
-	_, err := s.db.ExecContext(ctx, query, userID, timestamp)
+	_, err := tx.ExecContext(ctx, query, userID, timestamp)
 	return err
 }
