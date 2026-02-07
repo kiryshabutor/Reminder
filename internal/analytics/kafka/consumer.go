@@ -35,7 +35,7 @@ func (c *Consumer) Start() {
 	slog.Info("Kafka Consumer started...")
 
 	for {
-		m, err := c.reader.ReadMessage(context.Background())
+		m, err := c.reader.FetchMessage(context.Background())
 		if err != nil {
 			slog.Error("Error reading message", "error", err)
 			time.Sleep(1 * time.Second)
@@ -55,6 +55,7 @@ func (c *Consumer) Start() {
 		if err != nil {
 			slog.Error("Error processing event", "error", err)
 		}
+		c.reader.CommitMessages(ctx, m)
 	}
 }
 

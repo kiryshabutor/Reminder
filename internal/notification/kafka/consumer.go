@@ -42,7 +42,7 @@ func (c *Consumer) Start(ctx context.Context) {
 }
 
 func (c *Consumer) processMessage(ctx context.Context) {
-	m, err := c.reader.ReadMessage(ctx)
+	m, err := c.reader.FetchMessage(ctx)
 	if err != nil {
 		if ctx.Err() != nil {
 			return
@@ -52,6 +52,7 @@ func (c *Consumer) processMessage(ctx context.Context) {
 	}
 
 	c.handlePayload(m.Value)
+	c.reader.CommitMessages(ctx, m)
 }
 
 func (c *Consumer) handlePayload(data []byte) {
